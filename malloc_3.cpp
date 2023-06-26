@@ -257,6 +257,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         curr = (char*)tmp;
         curr += (tmp->size - sizeof(MallocMetadata))/2;
         new_curr = (MallocMetadata*)curr;
+        new_curr->size = (tmp->size - sizeof(MallocMetadata))/2;
         std::cout << "HERE1" << std::endl;
         free_block_manager->insert(new_curr);
         std::cout << "HERE2" << std::endl;
