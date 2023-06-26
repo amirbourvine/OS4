@@ -106,10 +106,8 @@ void* smalloc(size_t size){
             temp_res->size = size;
             block_list->insert(temp_res);
 
-            block_list->num_free_blocks -= 1;
             block_list->num_allocated_blocks += 1;
-            block_list->allocated_bytes += keep->size; //does not include meta-data
-            block_list->freed_bytes -= keep->size; //does not include meta-data
+            block_list->allocated_bytes += temp_res->size; //does not include meta-data
 
             return (temp_res+1);
         }
