@@ -312,7 +312,7 @@ int main() {
 
     std::cout << "free arr3 succeed\n";
 
-    sfree(array3);
+    sfree(array1);
     if(_num_free_blocks() != 3){
         std::cerr << "Incorrect number of free blocks\n";
         return 1;
