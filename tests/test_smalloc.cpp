@@ -5,14 +5,21 @@
 #include "header_2.h"
 
 int main(){
-    void* b1 = smalloc(10);
-    print();
-    std::cout << "***********************" << std::endl;
-    void* b2 = smalloc(20);
-    print();
-    std::cout << "***********************" << std::endl;
-    void* b3 = smalloc(30);
-    print();
-    std::cout << "***********************" << std::endl;
+    void* b1 = smalloc(10000000000);
+    if(b1==NULL){
+        std::cout << "SUCCESS" << std::endl;
+    }
+    else{
+        std::cout << "FAIL" << std::endl;
+    }
+    void* b2 = smalloc(0);
+    if(b2==NULL){
+        std::cout << "SUCCESS" << std::endl;
+    }
+    else{
+        std::cout << "FAIL" << std::endl;
+    }
+
+
 }
 
