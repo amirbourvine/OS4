@@ -6,4 +6,6 @@ int main(){
     print();
     smalloc(128-32);
     print();
+    smalloc(2016);
+    print();
 }
