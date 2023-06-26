@@ -8,7 +8,7 @@
 int main() {
     int num_elements;
     int* array;
-    
+
     for(int i = 0; i<3; i++) {
         std::cout << "Enter the number of elements: \n";
         std::cin >> num_elements;

@@ -3,6 +3,7 @@
 //
 #include <unistd.h>
 #include <cstddef>
+#include <iostream>
 
 #define MAX_SIZE 100000000
 
@@ -15,12 +16,14 @@ typedef struct MallocMetadata {
 
 typedef struct BlocksList {
     MallocMetadata* first = nullptr;
-    unsigned int num_free_blocks = 0;
-    unsigned int num_allocated_blocks = 0;
-    unsigned int allocated_bytes = 0; //does not include meta-data
-    unsigned int freed_bytes = 0; //does not include meta-data
+    unsigned int num_free_blocks = 0;//number of allocated blocks in the heap that are currently free
+    unsigned int num_allocated_blocks = 0;//overall (free and used) number of allocated blocks in the heap
+    unsigned int allocated_bytes = 0; // overall number (free and used) of allocated bytes in the heap, does not include meta-data
+    unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
     void insert(MallocMetadata* to_insert);
+
+    void print() const;
 } BlocksList;
 
 void BlocksList::insert(MallocMetadata *to_insert) {
@@ -59,6 +62,14 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     insert_after->next = to_insert;
 }
 
+void BlocksList::print() const {
+    MallocMetadata* temp = this->first;
+    while(temp!=nullptr){
+        std::cout << "# SIZE: " << temp->size << " #" << std::endl;
+        temp = temp->next;
+    }
+}
+
 BlocksList* block_list;
 
 MallocMetadata* find_block(size_t size){
@@ -74,14 +85,15 @@ MallocMetadata* find_block(size_t size){
     return keep;
 }
 
-
-//todo: copy good implementation
 void* use_sbrk(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
+
     void* ptr = sbrk(size);
+
     if(ptr == (void*)-1)
         return NULL;
+
     return ptr;
 }
 
@@ -90,8 +102,6 @@ void* smalloc(size_t size){
     if(keep!= nullptr){ //found a block
         keep->is_free = false;
         block_list->num_free_blocks -= 1;
-        block_list->num_allocated_blocks += 1;
-        block_list->allocated_bytes += keep->size; //does not include meta-data
         block_list->freed_bytes -= keep->size; //does not include meta-data
         return (keep+1);
     }
@@ -113,6 +123,31 @@ void* smalloc(size_t size){
         }
     }
 }
+
+size_t _num_free_blocks(){
+    return block_list->num_free_blocks;
+}
+
+size_t _num_free_bytes(){
+    return block_list->freed_bytes;
+}
+
+size_t _num_allocated_blocks(){
+    return block_list->num_allocated_blocks;
+}
+
+size_t _num_allocated_bytes() {
+    return block_list->allocated_bytes;
+}
+
+size_t _num_meta_data_bytes(){
+    return (block_list->num_allocated_blocks*sizeof(MallocMetadata));
+}
+
+size_t _size_meta_data(){
+    return sizeof(MallocMetadata);
+}
+
 
 
 
