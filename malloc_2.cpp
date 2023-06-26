@@ -34,7 +34,7 @@ void BlocksList::insert(MallocMetadata *to_insert) {
 
         return;
     }
-    while(temp!=nullptr && to_insert < temp){
+    while(temp!=nullptr && to_insert > temp){
         temp = temp->next;
     }
     if(temp== nullptr){//insert last
