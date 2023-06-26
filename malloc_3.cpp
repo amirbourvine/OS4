@@ -7,8 +7,12 @@
 #include <math.h>
 
 #include "tests/header_2.h"
-#define MAX_SIZE 100000000
-#define NUM_ORDERS 11
+
+#define MAX_SIZE (100000000)
+#define NUM_ORDERS (11)
+#define INITIAL_BLOCK_SIZE (128*1024)
+#define INITIAL_BLOCKS_NUM (32)
+#define ALIGN (128*1024*32)
 
 typedef struct MallocMetadata {
     size_t size; //does not include meta-data
@@ -65,7 +69,9 @@ void BlocksList::insert(MallocMetadata *to_insert) {
 
 typedef struct FreeBlocksManager {
     MallocMetadata* lists[NUM_ORDERS];
-    //todo: implement constructor
+
+
+    FreeBlocksManager();
 
     void insert(MallocMetadata* to_insert);
     MallocMetadata* find(size_t size);//finds best fit for size 'size'
@@ -77,7 +83,62 @@ int size_to_ord(size_t size){
     return (int)ceil(log2((size + sizeof(MallocMetadata))/128));
 }
 
+void* use_sbrk(size_t size){
+    if(size==0 or size>MAX_SIZE)
+        return NULL;
+
+    void* ptr = sbrk(size);
+
+    if(ptr == (void*)-1)
+        return NULL;
+
+    return ptr;
+}
+
 BlocksList* block_list = new BlocksList();
+
+FreeBlocksManager::FreeBlocksManager() {
+    for(int i =0;i<NUM_ORDERS-1; i++){
+        this->lists[i] = nullptr;
+    }
+
+    //first sbrk() to align
+    intptr_t curr_addr = (intptr_t)use_sbrk(0);
+    size_t size = ((int)ceil(curr_addr/ALIGN))*ALIGN-curr_addr;
+    use_sbrk(size);
+
+
+    void* start = use_sbrk(INITIAL_BLOCK_SIZE*INITIAL_BLOCKS_NUM);
+    char* curr;
+
+    MallocMetadata* tmp = (MallocMetadata*)start;
+    tmp->is_free = true;
+    tmp->size = INITIAL_BLOCK_SIZE-sizeof(MallocMetadata);
+    tmp->prev = nullptr;
+
+    MallocMetadata* keep = tmp;
+
+    this->lists[NUM_ORDERS-1] = tmp;
+
+    for(int i = 1; i<INITIAL_BLOCKS_NUM; i++){
+        curr = (char*)tmp;
+        curr += INITIAL_BLOCK_SIZE;
+        tmp = (MallocMetadata*)curr;
+
+        tmp->is_free = true;
+        tmp->size = INITIAL_BLOCK_SIZE-sizeof(MallocMetadata);
+        tmp->prev = keep;
+        keep->next = tmp;
+
+        keep = tmp;
+    }
+
+
+    block_list->num_allocated_blocks = INITIAL_BLOCKS_NUM;
+    block_list->allocated_bytes = INITIAL_BLOCKS_NUM*(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
+
+}
+
 FreeBlocksManager* free_block_manager = new FreeBlocksManager();
 
 MallocMetadata *FreeBlocksManager::find(size_t size) {
@@ -159,11 +220,18 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
 }
 
 void print()  {
-    MallocMetadata* temp = block_list->first;
+    MallocMetadata* temp;
     std::cout << "***********************" << std::endl;
-    while(temp!=nullptr){
-        std::cout << "# SIZE: " << temp->size << " #" << std::endl;
-        temp = temp->next;
+    for(int i = 0; i<NUM_ORDERS; i++) {
+        temp = free_block_manager->lists[i];
+        if(temp!= nullptr){
+            std::cout << "# i: " << i << " #" << std::endl;
+        }
+        while (temp != nullptr) {
+            std::cout << "  SIZE: " << temp->size;
+            temp = temp->next;
+        }
+        std::cout << std::endl;
     }
     std::cout << "# num_free_blocks: " << block_list->num_free_blocks << " #" << std::endl;
     std::cout << "# num_allocated_blocks: " << block_list->num_allocated_blocks << " #" << std::endl;
@@ -172,57 +240,33 @@ void print()  {
     std::cout << "***********************" << std::endl;
 }
 
-MallocMetadata* find_block(size_t size){
-    MallocMetadata* keep = nullptr;
-    MallocMetadata* temp = block_list->first;
-    while(temp!=nullptr){
-        if((temp->is_free) && (temp->size>=size)){
-            keep = temp;
-            break;
-        }
-        temp = temp->next;
+
+MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
+    MallocMetadata* tmp = init;
+    MallocMetadata* new_curr;
+    char* curr;
+    free_block_manager -> remove(init);
+    while((tmp->size - sizeof(MallocMetadata))/2 >= size){
+        tmp->size = (tmp->size - sizeof(MallocMetadata))/2;
+        curr = (char*)tmp;
+        curr += (tmp->size - sizeof(MallocMetadata))/2;
+        new_curr = (MallocMetadata*)curr;
+        free_block_manager->insert(new_curr);
     }
-    return keep;
+    return tmp;
 }
 
-
-void* use_sbrk(size_t size){
-    if(size==0 or size>MAX_SIZE)
-        return NULL;
-
-    void* ptr = sbrk(size);
-
-    if(ptr == (void*)-1)
-        return NULL;
-
-    return ptr;
-}
 
 void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
-    MallocMetadata* keep = find_block(size);
+    MallocMetadata* keep = free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
-        keep->is_free = false;
-        block_list->num_free_blocks -= 1;
-        block_list->freed_bytes -= keep->size; //does not include meta-data
+        keep = break_block_down(keep, size);
         return (keep+1);
     }
     else{ // did not find a block
-        void* new_block = use_sbrk(size + sizeof(MallocMetadata));
-        if(new_block==NULL) {
-            return NULL;
-        }
-        else{
-            MallocMetadata* temp_res = (MallocMetadata*)new_block;
-            temp_res->is_free = false;
-            temp_res->size = size;
-            block_list->insert(temp_res);
-            block_list->num_allocated_blocks += 1;
-            block_list->allocated_bytes += temp_res->size; //does not include meta-data
-
-            return (temp_res+1);
-        }
+        perror("BLOCK NOT FOUND");
     }
 }
 
@@ -249,7 +293,6 @@ size_t _num_meta_data_bytes(){
 size_t _size_meta_data(){
     return sizeof(MallocMetadata);
 }
-
 
 void* scalloc(size_t num, size_t size){
     void* allocated_block = smalloc(num * size);
