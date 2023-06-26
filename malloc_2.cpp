@@ -99,24 +99,29 @@ void* use_sbrk(size_t size){
 }
 
 void* smalloc(size_t size){
+    std::cout << "HERE1" << std::endl;
     MallocMetadata* keep = find_block(size);
+    std::cout << "HERE2" << std::endl;
     if(keep!= nullptr){ //found a block
+        std::cout << "HERE3" << std::endl;
         keep->is_free = false;
         block_list->num_free_blocks -= 1;
         block_list->freed_bytes -= keep->size; //does not include meta-data
         return (keep+1);
     }
     else{ // did not find a block
+        std::cout << "HERE4" << std::endl;
         void* new_block = use_sbrk(size + sizeof(MallocMetadata));
         if(new_block==NULL) {
             return NULL;
         }
         else{
+            std::cout << "HERE5" << std::endl;
             MallocMetadata* temp_res = (MallocMetadata*)new_block;
             temp_res->is_free = false;
             temp_res->size = size;
             block_list->insert(temp_res);
-
+            std::cout << "HERE6" << std::endl;
             block_list->num_allocated_blocks += 1;
             block_list->allocated_bytes += temp_res->size; //does not include meta-data
 

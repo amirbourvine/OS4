@@ -8,7 +8,6 @@
 #define MAX_SIZE 100000000
 
 void* smalloc(size_t size){
-    std::cout << "HERE1" << std::endl;
     if(size==0 or size>MAX_SIZE)
         return NULL;
 
