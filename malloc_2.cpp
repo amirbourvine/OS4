@@ -23,6 +23,8 @@ typedef struct BlocksList {
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
     void insert(MallocMetadata* to_insert);
+
+    void print() const;
 } BlocksList;
 
 void BlocksList::insert(MallocMetadata *to_insert) {
