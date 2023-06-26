@@ -74,7 +74,9 @@ void print()  {
 
 MallocMetadata* find_block(size_t size){
     MallocMetadata* keep = nullptr;
+    std::cout << "HERE-BEFORE" << std::endl;
     MallocMetadata* temp = block_list->first;
+    std::cout << "HERE-AFTER" << std::endl;
     while(temp!=nullptr){
         if((temp->is_free) && (temp->size>=size)){
             keep = temp;
@@ -101,7 +103,6 @@ void* use_sbrk(size_t size){
 void* smalloc(size_t size){
     std::cout << "HERE1" << std::endl;
     MallocMetadata* keep = find_block(size);
-    std::cout << "HERE2" << std::endl;
     if(keep!= nullptr){ //found a block
         std::cout << "HERE3" << std::endl;
         keep->is_free = false;
