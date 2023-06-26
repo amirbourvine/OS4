@@ -7,9 +7,12 @@
 int main(){
     void* b1 = smalloc(10);
     print();
+    std::cout << "***********************" << std::endl;
     void* b2 = smalloc(20);
     print();
+    std::cout << "***********************" << std::endl;
     void* b3 = smalloc(30);
     print();
+    std::cout << "***********************" << std::endl;s
 }
 
