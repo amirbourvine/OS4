@@ -256,9 +256,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* tmp = init;
     MallocMetadata* new_curr;
     char* curr;
-    std::cout << "HERE1" << std::endl;
     free_block_manager -> remove(init);
-    std::cout << "HERE2" << std::endl;
     while((((tmp->size - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
         size_t new_size = (tmp->size - sizeof(MallocMetadata))/2;
         tmp->size = new_size;
@@ -268,9 +266,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         new_curr->size = new_size;
         ++block_list->num_allocated_blocks;
         block_list->allocated_bytes-=sizeof(MallocMetadata);
-        std::cout << "HERE3" << std::endl;
         free_block_manager->insert(new_curr);
-        std::cout << "HERE4" << std::endl;
     }
     return tmp;
 }
@@ -335,16 +331,17 @@ void sfree(void* p){
         //Free Buddies
         while(size_to_ord(block->size) <= NUM_ORDERS - 1){
             free_block_manager->insert(block);
-
+            std::cout << "HERE1" << std::endl;
             MallocMetadata* buddy = (MallocMetadata*)(((size_t)block) ^ (block->size + sizeof(MallocMetadata)));
             if(!buddy->is_free){
+                std::cout << "BAD" << std::endl;
                 break;
             }
 
             //Buddy is also free
             free_block_manager->remove(block);
             free_block_manager->remove(buddy);
-
+            std::cout << "HERE2" << std::endl;
             block->size = block->size * 2 + sizeof(MallocMetadata);
         }
     }
