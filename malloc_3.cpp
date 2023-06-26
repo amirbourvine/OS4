@@ -333,6 +333,7 @@ void sfree(void* p){
             free_block_manager->insert(block);
             std::cout << "HERE1" << std::endl;
             MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
+            std::cout << "diff: " << ( (intptr_t)buddy-(intptr_t)block) <<std::endl;
             if(!buddy->is_free){
                 std::cout << "BAD" << std::endl;
                 std::cout << "total size: " << (block->size + sizeof(MallocMetadata)) <<std::endl;
