@@ -110,6 +110,9 @@ FreeBlocksManager::FreeBlocksManager() {
 
 
     void* start = use_sbrk(INITIAL_BLOCK_SIZE*INITIAL_BLOCKS_NUM);
+
+    std::cout << "start addr: " << (intptr_t)start <<std::endl;
+
     char* curr;
 
     MallocMetadata* tmp = (MallocMetadata*)start;
