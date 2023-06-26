@@ -204,6 +204,8 @@ void* srealloc(void* oldp, size_t size) {
 
     memmove(allocated_block, oldp, size);
     sfree(oldp);
+
+    return allocated_block;
 }
 
 
