@@ -13,7 +13,7 @@ int main() {
     std::cin >> num_elements;
 
     // Dynamically allocate memory for the array
-    array = (int*)malloc(num_elements * sizeof(int));
+    array = (int*)smalloc(num_elements * sizeof(int));
 
     if (array == NULL) {
         std::cerr << "Memory allocation failed!\n";
