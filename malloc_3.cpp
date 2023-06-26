@@ -109,9 +109,10 @@ FreeBlocksManager::FreeBlocksManager() {
     std::cout << "curr_addr: " << curr_addr <<std::endl;
     std::cout << "(double)curr_addr/ALIGN: " << (double)curr_addr/ALIGN <<std::endl;
     std::cout << "((int)ceil((double)curr_addr/ALIGN)): " << ((int)ceil((double)curr_addr/ALIGN)) <<std::endl;
-    std::cout << "((int)ceil((double)curr_addr/ALIGN))*ALIGN: " << ((int)ceil((double)curr_addr/ALIGN))*ALIGN <<std::endl;
-    
-    size_t size = ((int)ceil((double)curr_addr/ALIGN))*ALIGN-curr_addr;
+    size_t tmp1 = ((int)ceil((double)curr_addr/ALIGN));
+    size_t tmp2 = tmp1*ALIGN;
+    std::cout << "tmp2: " << tmp2 <<std::endl;
+    size_t size = tmp2-curr_addr;
     std::cout << "size: " << size <<std::endl;
     use_sbrk(size);
 
