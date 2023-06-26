@@ -100,6 +100,8 @@ void* use_sbrk(size_t size){
 }
 
 void* smalloc(size_t size){
+    if(size==0 or size>MAX_SIZE)
+        return NULL;
     MallocMetadata* keep = find_block(size);
     if(keep!= nullptr){ //found a block
         keep->is_free = false;
