@@ -136,6 +136,8 @@ FreeBlocksManager::FreeBlocksManager() {
 
     block_list->num_allocated_blocks = INITIAL_BLOCKS_NUM;
     block_list->allocated_bytes = INITIAL_BLOCKS_NUM*(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
+    block_list->num_free_blocks = INITIAL_BLOCKS_NUM;
+    block_list->freed_bytes = INITIAL_BLOCKS_NUM*(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
 
 }
 
