@@ -2,7 +2,6 @@
 // Created by amirb on 26/06/2023.
 //
 #include <unistd.h>
-#include <cstddef>
 
 #define MAX_SIZE 100000000
 
@@ -77,6 +76,57 @@ void* smalloc(size_t size){
         }
     }
 }
+
+void* scalloc(size_t num, size_t size){
+    void* allocated_block = smalloc(num * size);
+
+    if(allocated_block == NULL)
+        return NULL;
+
+    memset (allocated_block, 0, num * size);
+}
+
+void sfree(void* p){
+    if(p == NULL)
+        return;
+
+    MallocMetadata*  block = (MallocMetadata*)(p);
+
+    if(!block->is_free) {
+        block->is_free = true;
+        ++block_list->num_free_blocks;
+        block_list->freed_bytes += block->size;
+    }
+}
+
+void* srealloc(void* oldp, size_t size) {
+    if(oldp == NULL){
+        return smalloc(size);
+    }
+
+    MallocMetadata *block = (MallocMetadata*)(oldp);
+
+    if(block->size >= size){
+        if(block->is_free){
+            block->is_free = false;
+            --block_list->num_free_blocks;
+            block_list->freed_bytes -= block->size;
+        }
+
+        return oldp;
+    }
+
+    void* allocated_block = smalloc(size);
+
+    if(allocated_block == NULL)
+        return NULL;
+
+    memmove(allocated_block, oldp, size);
+    sfree(oldp);
+}
+
+
+
 
 
 
