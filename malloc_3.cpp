@@ -253,7 +253,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* new_curr;
     char* curr;
     free_block_manager -> remove(init);
-    while((((tmp->size - sizeof(MallocMetadata))/2)>=MIN_BLOCK_SIZE)&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
+    while((((tmp->size - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
         size_t new_size = (tmp->size - sizeof(MallocMetadata))/2;
         tmp->size = new_size;
         curr = (char*)tmp;
