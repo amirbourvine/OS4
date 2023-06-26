@@ -20,9 +20,8 @@ int main() {
         return 0;
     }
 
-    std::cout << "Enter " << num_elements << " integers:\n";
     for (int i = 0; i < num_elements; i++) {
-        std::cin >> array[i];
+        array[i] = 1;
     }
 
     std::cout << "You entered the following integers:\n";
