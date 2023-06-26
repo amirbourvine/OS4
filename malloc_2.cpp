@@ -20,15 +20,43 @@ typedef struct BlocksList {
     unsigned int allocated_bytes = 0; //does not include meta-data
     unsigned int freed_bytes = 0; //does not include meta-data
 
-    void insert(MallocMetadata* node);
+    void insert(MallocMetadata* to_insert);
 } BlocksList;
 
-void BlocksList::insert(MallocMetadata *node) {
+void BlocksList::insert(MallocMetadata *to_insert) {
     MallocMetadata* temp = this->first;
-    while(temp!=nullptr){
-        
+    if(temp == nullptr){
+        this->first = to_insert;
+        this->first->next = nullptr;
+        this->first->prev = nullptr;
+
+        return;
+    }
+    while(temp!=nullptr && to_insert < temp){
         temp = temp->next;
     }
+    if(temp== nullptr){//insert last
+        MallocMetadata* last = this->first;
+        while(last->next!= nullptr){ last = last->next; }
+        last->next = to_insert;
+        to_insert->next = nullptr;
+        to_insert->prev = last;
+        return;
+    }
+    if(temp==this->first){
+        this->first = to_insert;
+        to_insert->next = temp;
+        to_insert->prev = nullptr;
+        temp->prev = to_insert;
+        return;
+    }
+
+    //regular insertion
+    MallocMetadata* insert_after = temp->prev;
+    to_insert->next = temp;
+    to_insert->prev = insert_after;
+    temp->prev = to_insert;
+    insert_after->next = to_insert;
 }
 
 BlocksList* block_list;
@@ -61,6 +89,10 @@ void* smalloc(size_t size){
     MallocMetadata* keep = find_block(size);
     if(keep!= nullptr){ //found a block
         keep->is_free = false;
+        block_list->num_free_blocks -= 1;
+        block_list->num_allocated_blocks += 1;
+        block_list->allocated_bytes += keep->size; //does not include meta-data
+        block_list->freed_bytes -= keep->size; //does not include meta-data
         return (keep+1);
     }
     else{ // did not find a block
@@ -72,7 +104,13 @@ void* smalloc(size_t size){
             MallocMetadata* temp_res = (MallocMetadata*)new_block;
             temp_res->is_free = false;
             temp_res->size = size;
-            //todo: insert to blockList
+            block_list->insert(temp_res);
+
+            block_list->num_free_blocks -= 1;
+            block_list->num_allocated_blocks += 1;
+            block_list->allocated_bytes += keep->size; //does not include meta-data
+            block_list->freed_bytes -= keep->size; //does not include meta-data
+
             return (temp_res+1);
         }
     }
