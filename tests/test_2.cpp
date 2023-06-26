@@ -227,6 +227,7 @@ int main() {
 
     if(_num_allocated_blocks() != 3){
         std::cerr << "Incorrect number of allocated blocks\n";
+        std::cerr << _num_allocated_blocks() << "\n";
         return 1;
 
     }
@@ -276,6 +277,8 @@ int main() {
 
     }
 
+    std::cout << "free arr2 succeed\n";
+
     sfree(array3);
     if(_num_free_blocks() != 2){
         std::cerr << "Incorrect number of free blocks\n";
@@ -303,7 +306,6 @@ int main() {
 
     if(_num_meta_data_bytes() != _size_meta_data() * 3){
         std::cerr << "Incorrect number of meta data bytes\n";
-        std::cerr<< "Bourvine is so cool man\n";
         return 1;
 
     }
