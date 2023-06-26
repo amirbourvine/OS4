@@ -348,6 +348,10 @@ void sfree(void* p){
                 --block_list->num_allocated_blocks;
                 block_list->allocated_bytes += sizeof(MallocMetadata);
             }
+            else{
+                break;
+            }
+
         }
     }
 }
