@@ -13,6 +13,7 @@ int main(){
     print();
     sfree(b2);
     print();
-
+    void* b4 = smalloc(20);
+    print();
 }
 
