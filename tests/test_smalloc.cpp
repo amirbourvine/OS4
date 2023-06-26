@@ -7,19 +7,29 @@
 int main(){
     void* b1 = smalloc(10);
     print();
-    void* b2 = smalloc(20);
+    int* b2 = (int*)smalloc(20);
+    b2[0] = 2;
     print();
     void* b3 = smalloc(30);
     print();
     sfree(b2);
     print();
-    void* b4 =  srealloc(b2, 30);
+    int* b4 = (int*)srealloc(b2, 30);
     print();
+
     if(b2!=b4){
         std::cout << "SUCCESS" << std::endl;
     }
     else{
         std::cout << "FAIL" << std::endl;
     }
+
+    if(b4[0]==2){
+        std::cout << "SUCCESS" << std::endl;
+    }
+    else{
+        std::cout << "FAIL" << std::endl;
+    }
+
 }
 
