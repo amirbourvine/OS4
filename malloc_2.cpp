@@ -3,6 +3,7 @@
 //
 #include <unistd.h>
 #include <iostream>
+#include <stdio.h>
 
 #include "tests/header_2.h"
 #define MAX_SIZE 100000000
