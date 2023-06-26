@@ -9,7 +9,7 @@ void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
 
-    void* ptr = sbrk((intptr_t)size);
+    void* ptr = sbrk(size);
 
     if(ptr == (void*)-1)
         return NULL;
