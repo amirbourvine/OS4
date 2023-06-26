@@ -2,8 +2,6 @@
 // Created by amirb on 26/06/2023.
 //
 #include <unistd.h>
-#include <cstddef>
-#include <iostream>
 
 #define MAX_SIZE 100000000
 
@@ -85,6 +83,7 @@ MallocMetadata* find_block(size_t size){
     return keep;
 }
 
+
 void* use_sbrk(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
@@ -147,6 +146,57 @@ size_t _num_meta_data_bytes(){
 size_t _size_meta_data(){
     return sizeof(MallocMetadata);
 }
+
+
+void* scalloc(size_t num, size_t size){
+    void* allocated_block = smalloc(num * size);
+
+    if(allocated_block == NULL)
+        return NULL;
+
+    memset (allocated_block, 0, num * size);
+}
+
+void sfree(void* p){
+    if(p == NULL)
+        return;
+
+    MallocMetadata*  block = (MallocMetadata*)(p);
+
+    if(!block->is_free) {
+        block->is_free = true;
+        ++block_list->num_free_blocks;
+        block_list->freed_bytes += block->size;
+    }
+}
+
+void* srealloc(void* oldp, size_t size) {
+    if(oldp == NULL){
+        return smalloc(size);
+    }
+
+    MallocMetadata *block = (MallocMetadata*)(oldp);
+
+    if(block->size >= size){
+        if(block->is_free){
+            block->is_free = false;
+            --block_list->num_free_blocks;
+            block_list->freed_bytes -= block->size;
+        }
+
+        return oldp;
+    }
+
+    void* allocated_block = smalloc(size);
+
+    if(allocated_block == NULL)
+        return NULL;
+
+    memmove(allocated_block, oldp, size);
+    sfree(oldp);
+}
+
+
 
 
 
