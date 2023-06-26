@@ -5,6 +5,8 @@
 
 #define MAX_SIZE 100000000
 
+#include <cstddef>
+
 typedef struct MallocMetadata {
     size_t size; //does not include meta-data
     bool is_free;
