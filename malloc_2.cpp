@@ -23,8 +23,6 @@ typedef struct BlocksList {
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
     void insert(MallocMetadata* to_insert);
-
-    void print() const;
 } BlocksList;
 
 void BlocksList::insert(MallocMetadata *to_insert) {
@@ -67,10 +65,16 @@ BlocksList* block_list = new BlocksList();
 
 void print()  {
     MallocMetadata* temp = block_list->first;
+    std::cout << "***********************" << std::endl;
     while(temp!=nullptr){
         std::cout << "# SIZE: " << temp->size << " #" << std::endl;
         temp = temp->next;
     }
+    std::cout << "# num_free_blocks: " << block_list->num_free_blocks << " #" << std::endl;
+    std::cout << "# num_allocated_blocks: " << block_list->num_allocated_blocks << " #" << std::endl;
+    std::cout << "# allocated_bytes: " << block_list->allocated_bytes << " #" << std::endl;
+    std::cout << "# freed_bytes: " << block_list->freed_bytes << " #" << std::endl;
+    std::cout << "***********************" << std::endl;
 }
 
 MallocMetadata* find_block(size_t size){
@@ -100,6 +104,8 @@ void* use_sbrk(size_t size){
 }
 
 void* smalloc(size_t size){
+    if(size==0 or size>MAX_SIZE)
+        return NULL;
     MallocMetadata* keep = find_block(size);
     if(keep!= nullptr){ //found a block
         keep->is_free = false;
@@ -164,6 +170,7 @@ void sfree(void* p){
         return;
 
     MallocMetadata*  block = (MallocMetadata*)(p);
+    block -= 1;
 
     if(!block->is_free) {
         block->is_free = true;
@@ -178,6 +185,7 @@ void* srealloc(void* oldp, size_t size) {
     }
 
     MallocMetadata *block = (MallocMetadata*)(oldp);
+    block -= 1;
 
     if(block->size >= size){
         if(block->is_free){
