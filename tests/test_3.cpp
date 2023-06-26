@@ -4,8 +4,8 @@
 #include "header_2.h"
 int main(){
     print();
-    smalloc(128-32);
+    void* b1 = smalloc(96);
     print();
-    smalloc(2016);
+    sfree(b1);
     print();
 }
