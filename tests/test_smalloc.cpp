@@ -13,7 +13,13 @@ int main(){
     print();
     sfree(b2);
     print();
-    void* b4 = smalloc(20);
+    void* b4 =  srealloc(b2, 20);
     print();
+    if(b2==b4){
+        std::cout << "SUCCESS" << std::endl;
+    }
+    else{
+        std::cout << "FAIL" << std::endl;
+    }
 }
 
