@@ -186,6 +186,7 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
     block_list->freed_bytes+=to_insert->size;
 
     int ord = size_to_ord(to_insert->size);
+    std::cout << "ord: "<< ord << std::endl;
     MallocMetadata* first = free_block_manager->lists[ord];
 
     MallocMetadata* temp = first;
@@ -259,9 +260,8 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         curr += (tmp->size - sizeof(MallocMetadata))/2;
         new_curr = (MallocMetadata*)curr;
         new_curr->size = (tmp->size - sizeof(MallocMetadata))/2;
-        std::cout << "HERE1" << std::endl;
+        std::cout << "new_curr->size: "<< new_curr->size << std::endl;
         free_block_manager->insert(new_curr);
-        std::cout << "HERE2" << std::endl;
     }
     return tmp;
 }
