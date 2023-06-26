@@ -2,10 +2,9 @@
 // Created by amirb on 26/06/2023.
 //
 #include <unistd.h>
+#include <cstddef>
 
 #define MAX_SIZE 100000000
-
-#include <cstddef>
 
 typedef struct MallocMetadata {
     size_t size; //does not include meta-data
@@ -24,19 +23,17 @@ typedef struct BlocksList {
     void insert(MallocMetadata* node);
 } BlocksList;
 
-BlocksList* block_list;
-
-//todo: copy good implementation
-void* use_sbrk(size_t size){
-    if(size==0 or size>MAX_SIZE)
-        return NULL;
-    void* ptr = sbrk(size);
-    if(ptr==-1)
-        return NULL;
-    return ptr;
+void BlocksList::insert(MallocMetadata *node) {
+    MallocMetadata* temp = this->first;
+    while(temp!=nullptr){
+        
+        temp = temp->next;
+    }
 }
 
-void* smalloc(size_t size){
+BlocksList* block_list;
+
+MallocMetadata* find_block(size_t size){
     MallocMetadata* keep = nullptr;
     MallocMetadata* temp = block_list->first;
     while(temp!=nullptr){
@@ -46,6 +43,22 @@ void* smalloc(size_t size){
         }
         temp = temp->next;
     }
+    return keep;
+}
+
+
+//todo: copy good implementation
+void* use_sbrk(size_t size){
+    if(size==0 or size>MAX_SIZE)
+        return NULL;
+    void* ptr = sbrk(size);
+    if(ptr == (void*)-1)
+        return NULL;
+    return ptr;
+}
+
+void* smalloc(size_t size){
+    MallocMetadata* keep = find_block(size);
     if(keep!= nullptr){ //found a block
         keep->is_free = false;
         return (keep+1);
