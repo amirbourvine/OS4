@@ -5,31 +5,23 @@
 #include "header_2.h"
 
 int main(){
-    void* b1 = smalloc(10);
+    int* b1 = (int*)scalloc(5, sizeof(int));
     print();
-    int* b2 = (int*)smalloc(20);
-    b2[0] = 2;
-    print();
-    void* b3 = smalloc(30);
+    for(int i = 0; i<5; i++){
+        if(b1[i]!=0){
+            std::cout << "FAIL" << std::endl;
+        }
+    }
+    int* b2 = (int*)smalloc(5*sizeof(int));
+    b2[0] = 4;
     print();
     sfree(b2);
+    int* b3 = (int*)scalloc(5, sizeof(int));
     print();
-    int* b4 = (int*)srealloc(b2, 30);
-    print();
-
-    if(b2!=b4){
-        std::cout << "SUCCESS" << std::endl;
+    for(int i = 0; i<5; i++){
+        if(b1[i]!=0){
+            std::cout << "FAIL" << std::endl;
+        }
     }
-    else{
-        std::cout << "FAIL" << std::endl;
-    }
-
-    if(b4[0]==2){
-        std::cout << "SUCCESS" << std::endl;
-    }
-    else{
-        std::cout << "FAIL" << std::endl;
-    }
-
 }
 

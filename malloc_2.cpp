@@ -163,6 +163,8 @@ void* scalloc(size_t num, size_t size){
         return NULL;
 
     memset (allocated_block, 0, num * size);
+
+    return allocated_block;
 }
 
 void sfree(void* p){
