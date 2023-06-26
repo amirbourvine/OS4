@@ -335,6 +335,8 @@ void sfree(void* p){
             MallocMetadata* buddy = (MallocMetadata*)(((size_t)block) ^ (block->size + sizeof(MallocMetadata)));
             if(!buddy->is_free){
                 std::cout << "BAD" << std::endl;
+                std::cout << "total size: " << (block->size + sizeof(MallocMetadata)) <<std::endl;
+                std::cout << "addr: " << (size_t)block <<std::endl;
                 std::cout << "buddy->size: " << buddy->size <<std::endl;
                 break;
             }
