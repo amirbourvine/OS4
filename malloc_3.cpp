@@ -105,11 +105,16 @@ FreeBlocksManager::FreeBlocksManager() {
 
     //first sbrk() to align
     intptr_t curr_addr = (intptr_t)use_sbrk(0);
-    size_t size = ((int)ceil(curr_addr/ALIGN))*ALIGN-curr_addr;
+
+    std::cout << "curr_addr: " << curr_addr <<std::endl;
+
+    size_t size = ((int)ceil((double)curr_addr/ALIGN))*ALIGN-curr_addr;
+    std::cout << "size: " << size <<std::endl;
     use_sbrk(size);
 
 
     void* start = use_sbrk(INITIAL_BLOCK_SIZE*INITIAL_BLOCKS_NUM);
+
 
     std::cout << "start addr: " << (intptr_t)start <<std::endl;
 
