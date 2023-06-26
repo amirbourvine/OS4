@@ -67,10 +67,16 @@ BlocksList* block_list = new BlocksList();
 
 void print()  {
     MallocMetadata* temp = block_list->first;
+    std::cout << "***********************" << std::endl;
     while(temp!=nullptr){
         std::cout << "# SIZE: " << temp->size << " #" << std::endl;
         temp = temp->next;
     }
+    std::cout << "# num_free_blocks: " << block_list->num_free_blocks << " #" << std::endl;
+    std::cout << "# num_allocated_blocks: " << block_list->num_allocated_blocks << " #" << std::endl;
+    std::cout << "# allocated_bytes: " << block_list->allocated_bytes << " #" << std::endl;
+    std::cout << "# freed_bytes: " << block_list->freed_bytes << " #" << std::endl;
+    std::cout << "***********************" << std::endl;
 }
 
 MallocMetadata* find_block(size_t size){
