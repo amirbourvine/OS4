@@ -1,8 +1,9 @@
 //
 // Created by amirb on 26/06/2023.
 //
-#include <unistd.h>
+#include <stdlib.h>
 
+#include "header_1.h"
 #define MAX_SIZE 100000000
 
 void* smalloc(size_t size){
@@ -11,7 +12,7 @@ void* smalloc(size_t size){
 
     void* ptr = sbrk(size);
 
-    if(ptr==-1)
+    if(ptr== (void*)-1)
         return NULL;
 
     return ptr;

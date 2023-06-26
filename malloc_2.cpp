@@ -2,6 +2,8 @@
 // Created by amirb on 26/06/2023.
 //
 
+#include <cstddef>
+
 typedef struct MallocMetadata {
     size_t size;
     bool is_free;
