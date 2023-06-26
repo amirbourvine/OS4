@@ -9,26 +9,27 @@ int main() {
     int num_elements;
     int* array;
 
-    std::cout << "Enter the number of elements: \n";
-    std::cin >> num_elements;
+    for(int i = 0; i<3; i++) {
+        std::cout << "Enter the number of elements: \n";
+        std::cin >> num_elements;
 
-    // Dynamically allocate memory for the array
-    array = (int*)smalloc(num_elements * sizeof(int));
+        // Dynamically allocate memory for the array
+        array = (int *) smalloc(num_elements * sizeof(int));
 
-    if (array == NULL) {
-        std::cerr << "Memory allocation failed!\n";
-        return 0;
+        if (array == NULL) {
+            std::cerr << "Memory allocation failed!\n";
+            return 0;
+        }
+
+        for (int i = 0; i < num_elements; i++) {
+            array[i] = 1;
+        }
+
+        std::cout << "You entered the following integers:\n";
+        for (int i = 0; i < num_elements; i++) {
+            std::cout << array[i] << " ";
+        }
+        std::cout << "\n";
     }
-
-    for (int i = 0; i < num_elements; i++) {
-        array[i] = 1;
-    }
-
-    std::cout << "You entered the following integers:\n";
-    for (int i = 0; i < num_elements; i++) {
-        std::cout << array[i] << " ";
-    }
-    std::cout << "\n";
-
     return 0;
 }
