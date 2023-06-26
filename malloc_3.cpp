@@ -4,9 +4,11 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
+#include <math.h>
 
 #include "tests/header_2.h"
 #define MAX_SIZE 100000000
+#define NUM_ORDERS 11
 
 typedef struct MallocMetadata {
     size_t size; //does not include meta-data
@@ -61,7 +63,61 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     insert_after->next = to_insert;
 }
 
+typedef struct FreeBlocksManager {
+    MallocMetadata* lists[NUM_ORDERS];
+    //todo: implement constructor
+
+    void insert(MallocMetadata* to_insert);
+    MallocMetadata* find(size_t size);//finds best fit for size 'size'
+    void remove(MallocMetadata* to_remove);
+} FreeBlocksManager;
+
+int size_to_ord(size_t size){
+    return (int)ceil(log2((size+ sizeof(MallocMetadata))/128));
+}
+
+FreeBlocksManager::
+
 BlocksList* block_list = new BlocksList();
+FreeBlocksManager* free_block_manager = new FreeBlocksManager();
+
+void FreeBlocksManager::insert(MallocMetadata *to_insert) {
+    int ord = size_to_ord(to_insert->size);
+    MallocMetadata* first = free_block_manager->lists[ord];
+
+    MallocMetadata* temp = first;
+    if(temp == nullptr){
+        free_block_manager->lists[ord] = to_insert;
+        to_insert->next = nullptr;
+        to_insert->prev = nullptr;
+        return;
+    }
+    while(temp!=nullptr && to_insert > temp){
+        temp = temp->next;
+    }
+    if(temp == nullptr){//insert last
+        MallocMetadata* last = first;
+        while(last->next!= nullptr){ last = last->next; }
+        last->next = to_insert;
+        to_insert->next = nullptr;
+        to_insert->prev = last;
+        return;
+    }
+    if(temp==first){
+        free_block_manager->lists[ord] = to_insert;
+        to_insert->next = temp;
+        to_insert->prev = nullptr;
+        temp->prev = to_insert;
+        return;
+    }
+
+    //regular insertion
+    MallocMetadata* insert_after = temp->prev;
+    to_insert->next = temp;
+    to_insert->prev = insert_after;
+    temp->prev = to_insert;
+    insert_after->next = to_insert;
+}
 
 void print()  {
     MallocMetadata* temp = block_list->first;
