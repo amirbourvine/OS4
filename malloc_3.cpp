@@ -250,6 +250,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     char* curr;
     free_block_manager -> remove(init);
     while((tmp->size - sizeof(MallocMetadata))/2 >= size){
+        std::cout << "HERE-BAD" << std::endl;
         tmp->size = (tmp->size - sizeof(MallocMetadata))/2;
         curr = (char*)tmp;
         curr += (tmp->size - sizeof(MallocMetadata))/2;
