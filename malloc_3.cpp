@@ -340,12 +340,14 @@ void sfree(void* p){
             }
 
             //Buddy is also free
-            free_block_manager->remove(block);
-            free_block_manager->remove(buddy);
-            block->size = block->size * 2 + sizeof(MallocMetadata);
+            if(NUM_ORDERS - 1!=size_to_ord(block->size)) {
+                free_block_manager->remove(block);
+                free_block_manager->remove(buddy);
+                block->size = block->size * 2 + sizeof(MallocMetadata);
 
-            --block_list->num_allocated_blocks;
-            block_list->allocated_bytes+=sizeof(MallocMetadata);
+                --block_list->num_allocated_blocks;
+                block_list->allocated_bytes += sizeof(MallocMetadata);
+            }
         }
     }
 }
