@@ -332,11 +332,11 @@ void sfree(void* p){
         while(size_to_ord(block->size) <= NUM_ORDERS - 1){
             free_block_manager->insert(block);
             std::cout << "HERE1" << std::endl;
-            MallocMetadata* buddy = (MallocMetadata*)(((size_t)block) ^ (block->size + sizeof(MallocMetadata)));
+            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
             if(!buddy->is_free){
                 std::cout << "BAD" << std::endl;
                 std::cout << "total size: " << (block->size + sizeof(MallocMetadata)) <<std::endl;
-                std::cout << "addr: " << (size_t)block <<std::endl;
+                std::cout << "addr: " << (intptr_t)block <<std::endl;
                 std::cout << "buddy->size: " << buddy->size <<std::endl;
                 break;
             }
