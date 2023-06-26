@@ -73,15 +73,54 @@ typedef struct FreeBlocksManager {
 } FreeBlocksManager;
 
 int size_to_ord(size_t size){
-    return (int)ceil(log2((size+ sizeof(MallocMetadata))/128));
+    //gets size of block (w\o meta-data)
+    return (int)ceil(log2((size + sizeof(MallocMetadata))/128));
 }
-
-FreeBlocksManager::
 
 BlocksList* block_list = new BlocksList();
 FreeBlocksManager* free_block_manager = new FreeBlocksManager();
 
+MallocMetadata *FreeBlocksManager::find(size_t size) {
+    int ord_start = size_to_ord(size);
+
+    while(ord_start<=10){
+        if(free_block_manager->lists[ord_start]!= nullptr){
+            return free_block_manager->lists[ord_start];
+        }
+        ord_start++;
+    }
+    return nullptr;
+}
+
+void FreeBlocksManager::remove(MallocMetadata *to_remove) {
+
+    to_remove->is_free = false;
+    --block_list->num_free_blocks;
+    block_list->freed_bytes-=to_remove->size;
+
+    int ord = size_to_ord(to_remove->size);
+
+    if(to_remove->prev == nullptr){//first
+        free_block_manager->lists[ord] = to_remove->next;
+        to_remove->next->prev = nullptr;
+        return;
+    }
+    if(to_remove->next == nullptr){//last
+        to_remove->prev->next = nullptr;
+        return;
+    }
+    MallocMetadata *before = to_remove->prev;
+    MallocMetadata *after = to_remove->next;
+    before->next = after;
+    after->prev = before;
+}
+
 void FreeBlocksManager::insert(MallocMetadata *to_insert) {
+
+    to_insert->is_free = true;
+    ++block_list->num_free_blocks;
+    block_list->freed_bytes+=to_insert->size;
+
     int ord = size_to_ord(to_insert->size);
     MallocMetadata* first = free_block_manager->lists[ord];
 
