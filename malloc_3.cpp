@@ -157,8 +157,6 @@ MallocMetadata *FreeBlocksManager::find(size_t size) {
 }
 
 void FreeBlocksManager::remove(MallocMetadata *to_remove) {
-    if(to_remove== nullptr)
-        std::cout << "BAD" << std::endl;
     to_remove->is_free = false;
     --block_list->num_free_blocks;
     block_list->freed_bytes-=to_remove->size;
@@ -167,6 +165,7 @@ void FreeBlocksManager::remove(MallocMetadata *to_remove) {
 
     if(to_remove->prev == nullptr && to_remove->next == nullptr) {//only
         free_block_manager->lists[ord] = nullptr;
+        return;
     }
 
     if(to_remove->prev == nullptr){//first
