@@ -106,21 +106,13 @@ FreeBlocksManager::FreeBlocksManager() {
     //first sbrk() to align
     intptr_t curr_addr = (intptr_t)sbrk(0);
 
-    std::cout << "curr_addr: " << curr_addr <<std::endl;
-    std::cout << "(double)curr_addr/ALIGN: " << (double)curr_addr/ALIGN <<std::endl;
-    std::cout << "((int)ceil((double)curr_addr/ALIGN)): " << ((int)ceil((double)curr_addr/ALIGN)) <<std::endl;
     size_t tmp1 = ((int)ceil((double)curr_addr/ALIGN));
     size_t tmp2 = tmp1*ALIGN;
-    std::cout << "tmp2: " << tmp2 <<std::endl;
     size_t size = tmp2-curr_addr;
-    std::cout << "size: " << size <<std::endl;
     use_sbrk(size);
 
 
     void* start = use_sbrk(INITIAL_BLOCK_SIZE*INITIAL_BLOCKS_NUM);
-
-
-    std::cout << "start addr: " << (intptr_t)start <<std::endl;
 
     char* curr;
 
@@ -202,7 +194,6 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
     block_list->freed_bytes+=to_insert->size;
 
     int ord = size_to_ord(to_insert->size);
-    std::cout << "ord: "<< ord << std::endl;
     MallocMetadata* first = free_block_manager->lists[ord];
 
     MallocMetadata* temp = first;
@@ -343,22 +334,14 @@ void sfree(void* p){
         //Free Buddies
         while(size_to_ord(block->size) <= NUM_ORDERS - 1){
             free_block_manager->insert(block);
-            std::cout << "HERE1" << std::endl;
             MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
-            std::cout << "diff: " << ( (intptr_t)buddy-(intptr_t)block) <<std::endl;
             if(!buddy->is_free){
-                std::cout << "BAD" << std::endl;
-                std::cout << "total size: " << (block->size + sizeof(MallocMetadata)) <<std::endl;
-                std::cout << "addr: " << (intptr_t)block <<std::endl;
-                std::cout << "buddy->addr: " << (intptr_t)buddy <<std::endl;
-                std::cout << "buddy->size: " << buddy->size <<std::endl;
                 break;
             }
 
             //Buddy is also free
             free_block_manager->remove(block);
             free_block_manager->remove(buddy);
-            std::cout << "HERE2" << std::endl;
             block->size = block->size * 2 + sizeof(MallocMetadata);
         }
     }
