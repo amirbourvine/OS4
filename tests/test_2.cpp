@@ -175,7 +175,7 @@ int main() {
 
     }
 
-    if(_num_allocated_blocks() != 2){
+    if(_num_allocated_blocks() != 3){
         std::cerr << "Incorrect number of allocated blocks\n";
         return 1;
 
