@@ -104,7 +104,7 @@ FreeBlocksManager::FreeBlocksManager() {
     }
 
     //first sbrk() to align
-    intptr_t curr_addr = (intptr_t)use_sbrk(0);
+    intptr_t curr_addr = (intptr_t)sbrk(0);
 
     std::cout << "curr_addr: " << curr_addr <<std::endl;
 
