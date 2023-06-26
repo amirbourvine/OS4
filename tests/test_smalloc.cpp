@@ -9,10 +9,10 @@ int main(){
     print();
     void* b2 = smalloc(20);
     print();
-    std::cout << "***********************" << std::endl;
     void* b3 = smalloc(30);
     print();
-    std::cout << "***********************" << std::endl;
+    sfree(b2);
+    print();
 
 }
 
