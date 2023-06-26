@@ -181,7 +181,7 @@ int main() {
 
     }
 
-    if(_num_allocated_bytes() != sizeof(int) * num_elements * 2){
+    if(_num_allocated_bytes() != sizeof(int) * num_elements * 3){
         std::cerr << "Incorrect number of allocated bytes\n";
         return 1;
 
