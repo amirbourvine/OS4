@@ -261,7 +261,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         size_t new_size = (tmp->size - sizeof(MallocMetadata))/2;
         tmp->size = new_size;
         curr = (char*)tmp;
-        curr += new_size;
+        curr += new_size + sizeof(MallocMetadata);
         new_curr = (MallocMetadata*)curr;
         new_curr->size = new_size;
         ++block_list->num_allocated_blocks;
