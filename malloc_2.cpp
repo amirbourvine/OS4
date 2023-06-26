@@ -61,8 +61,7 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     insert_after->next = to_insert;
 }
 
-
-BlocksList* block_list;
+BlocksList* block_list = new BlocksList();
 
 void print()  {
     MallocMetadata* temp = block_list->first;
