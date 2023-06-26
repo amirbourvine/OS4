@@ -13,6 +13,6 @@ int main(){
     std::cout << "***********************" << std::endl;
     void* b3 = smalloc(30);
     print();
-    std::cout << "***********************" << std::endl;s
+    std::cout << "***********************" << std::endl;
 }
 
