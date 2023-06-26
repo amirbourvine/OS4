@@ -5,7 +5,6 @@
 #include "header_2.h"
 
 int main(){
-    std::cout << "HERE" << std::endl;
     void* b1 = smalloc(10);
     print();
     void* b2 = smalloc(20);
