@@ -271,9 +271,13 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
+    std::cout << "HERE1" << std::endl;
     MallocMetadata* keep = free_block_manager->find(size);
+    std::cout << "HERE2" << std::endl;
     if(keep!= nullptr){ //found a block
+        std::cout << "HERE3" << std::endl;
         keep = break_block_down(keep, size);
+        std::cout << "HERE4" << std::endl;
         return (keep+1);
     }
     else{ // did not find a block
