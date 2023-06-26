@@ -3,7 +3,7 @@
 //
 #include <unistd.h>
 
-#include "header_1.h"
+//#include "header_1.h"
 #define MAX_SIZE 100000000
 
 void* smalloc(size_t size){
