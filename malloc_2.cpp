@@ -22,8 +22,6 @@ typedef struct BlocksList {
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
     void insert(MallocMetadata* to_insert);
-
-    void print() const;
 } BlocksList;
 
 void BlocksList::insert(MallocMetadata *to_insert) {
@@ -62,15 +60,16 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     insert_after->next = to_insert;
 }
 
-void BlocksList::print() const {
-    MallocMetadata* temp = this->first;
+
+BlocksList* block_list;
+
+void print()  {
+    MallocMetadata* temp = block_list->first;
     while(temp!=nullptr){
         std::cout << "# SIZE: " << temp->size << " #" << std::endl;
         temp = temp->next;
     }
 }
-
-BlocksList* block_list;
 
 MallocMetadata* find_block(size_t size){
     MallocMetadata* keep = nullptr;
