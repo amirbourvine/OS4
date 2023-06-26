@@ -337,6 +337,7 @@ void sfree(void* p){
                 std::cout << "BAD" << std::endl;
                 std::cout << "total size: " << (block->size + sizeof(MallocMetadata)) <<std::endl;
                 std::cout << "addr: " << (intptr_t)block <<std::endl;
+                std::cout << "buddy->addr: " << (intptr_t)buddy <<std::endl;
                 std::cout << "buddy->size: " << buddy->size <<std::endl;
                 break;
             }
