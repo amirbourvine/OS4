@@ -24,24 +24,26 @@ int main() {
     }
 
     if(_num_free_blocks() != 0){
-        std::cerr << "Incorrect number of free blocks";
+        std::cerr << "Incorrect number of free blocks\n";
     }
 
     if(_num_free_bytes() != 0){
-        std::cerr << "Incorrect number of free bytes";
+        std::cerr << "Incorrect number of free bytes\n";
     }
 
     if(_num_allocated_blocks() != 1){
-        std::cerr << "Incorrect number of allocated blocks";
+        std::cerr << "Incorrect number of allocated blocks\n";
     }
 
     if(_num_allocated_bytes() != sizeof(int) * num_elements){
-        std::cerr << "Incorrect number of allocated bytes";
+        std::cerr << "Incorrect number of allocated bytes\n";
     }
     
     if(_num_meta_data_bytes() != _size_meta_data()){
-        std::cerr << "Incorrect number of meta data bytes";
+        std::cerr << "Incorrect number of meta data bytes\n";
     }
+
+    std::cout << "allocation 1 succeed\n";
 
     int* array2 = (int*) smalloc(num_elements * sizeof(int));
 
@@ -60,24 +62,26 @@ int main() {
     }
 
     if(_num_free_blocks() != 0){
-        std::cerr << "Incorrect number of free blocks";
+        std::cerr << "Incorrect number of free blocks\n";
     }
 
     if(_num_free_bytes() != 0){
-        std::cerr << "Incorrect number of free bytes";
+        std::cerr << "Incorrect number of free bytes\n";
     }
 
     if(_num_allocated_blocks() != 2){
-        std::cerr << "Incorrect number of allocated blocks";
+        std::cerr << "Incorrect number of allocated blocks\n";
     }
 
     if(_num_allocated_bytes() != sizeof(int) * num_elements * 2){
-        std::cerr << "Incorrect number of allocated bytes";
+        std::cerr << "Incorrect number of allocated bytes\n";
     }
 
     if(_num_meta_data_bytes() != 2 * _size_meta_data()){
-        std::cerr << "Incorrect number of meta data bytes";
+        std::cerr << "Incorrect number of meta data bytes\n";
     }
+
+    std::cout << "allocation 2 succeed\n";
 
     int* array3 = (int*) smalloc(num_elements * sizeof(int));
 
@@ -96,26 +100,26 @@ int main() {
     }
 
     if(_num_free_blocks() != 0){
-        std::cerr << "Incorrect number of free blocks";
+        std::cerr << "Incorrect number of free blocks\n";
     }
 
     if(_num_free_bytes() != 0){
-        std::cerr << "Incorrect number of free bytes";
+        std::cerr << "Incorrect number of free bytes\n";
     }
 
     if(_num_allocated_blocks() != 2){
-        std::cerr << "Incorrect number of allocated blocks";
+        std::cerr << "Incorrect number of allocated blocks\n";
     }
 
     if(_num_allocated_bytes() != sizeof(int) * num_elements * 3){
-        std::cerr << "Incorrect number of allocated bytes";
+        std::cerr << "Incorrect number of allocated bytes\n";
     }
 
     if(_num_meta_data_bytes() != _size_meta_data() * 3){
-        std::cerr << "Incorrect number of meta data bytes";
+        std::cerr << "Incorrect number of meta data bytes\n";
     }
     
-    std::cout << "We made it here!!\n";
+    std::cout << "allocation 3 succeed\n";
 
     return 0;
 }
