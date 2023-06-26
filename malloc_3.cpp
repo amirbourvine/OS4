@@ -224,14 +224,17 @@ void print()  {
     std::cout << "***********************" << std::endl;
     for(int i = 0; i<NUM_ORDERS; i++) {
         temp = free_block_manager->lists[i];
-        if(temp!= nullptr){
+        bool flag = (temp!= nullptr);
+        if(flag){
             std::cout << "# i: " << i << " #" << std::endl;
         }
         while (temp != nullptr) {
             std::cout << "  SIZE: " << temp->size;
             temp = temp->next;
         }
-        std::cout << std::endl;
+        if(flag){
+            std::cout << std::endl;
+        }
     }
     std::cout << "# num_free_blocks: " << block_list->num_free_blocks << " #" << std::endl;
     std::cout << "# num_allocated_blocks: " << block_list->num_allocated_blocks << " #" << std::endl;
