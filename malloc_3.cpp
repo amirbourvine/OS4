@@ -13,6 +13,7 @@
 #define INITIAL_BLOCK_SIZE (128*1024)
 #define INITIAL_BLOCKS_NUM (32)
 #define ALIGN (128*1024*32)
+#define MIN_BLOCK_SIZE (128)
 
 typedef struct MallocMetadata {
     size_t size; //does not include meta-data
@@ -251,7 +252,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* new_curr;
     char* curr;
     free_block_manager -> remove(init);
-    while((tmp->size - sizeof(MallocMetadata))/2 >= size){
+    while((((tmp->size - sizeof(MallocMetadata))/2)>=MIN_BLOCK_SIZE)&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
         std::cout << "HERE-GOOD" << std::endl;
         tmp->size = (tmp->size - sizeof(MallocMetadata))/2;
         curr = (char*)tmp;
