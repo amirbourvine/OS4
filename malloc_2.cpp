@@ -23,8 +23,6 @@ typedef struct BlocksList {
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
     void insert(MallocMetadata* to_insert);
-
-    void print() const;
 } BlocksList;
 
 void BlocksList::insert(MallocMetadata *to_insert) {
@@ -172,6 +170,7 @@ void sfree(void* p){
         return;
 
     MallocMetadata*  block = (MallocMetadata*)(p);
+    block -= 1;
 
     if(!block->is_free) {
         block->is_free = true;
@@ -186,6 +185,7 @@ void* srealloc(void* oldp, size_t size) {
     }
 
     MallocMetadata *block = (MallocMetadata*)(oldp);
+    block -= 1;
 
     if(block->size >= size){
         if(block->is_free){
