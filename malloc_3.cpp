@@ -227,13 +227,25 @@ void sfree(void* p){
     if(p == NULL)
         return;
 
-    MallocMetadata*  block = (MallocMetadata*)(p);
+    MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
 
     if(!block->is_free) {
-        block->is_free = true;
-        ++block_list->num_free_blocks;
-        block_list->freed_bytes += block->size;
+        //Free Buddies
+        while(size_to_ord(block->size) <= NUM_ORDERS - 1){
+            free_block_manager->insert(block);
+
+            MallocMetadata* buddy = (MallocMetadata*)(((size_t)block) ^ (block->size + sizeof(MallocMetadata)));
+            if(!buddy->is_free){
+                break;
+            }
+
+            //Buddy is also free
+            free_block_manager->remove(block);
+            free_block_manager->remove(buddy);
+
+            block->size = block->size * 2 + sizeof(MallocMetadata);
+        }
     }
 }
 
