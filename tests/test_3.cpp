@@ -4,6 +4,6 @@
 #include "header_2.h"
 int main(){
     print();
-    smalloc(128);
+    smalloc(128-32);
     print();
 }
