@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <iostream>
 
-#include "header_2.h"
+#include "tests/header_2.h"
 #define MAX_SIZE 100000000
 
 typedef struct MallocMetadata {
