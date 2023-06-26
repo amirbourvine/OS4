@@ -253,16 +253,15 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* new_curr;
     char* curr;
     free_block_manager -> remove(init);
-    std::cout << "init->size: "<< init->size << std::endl;
     while((((tmp->size - sizeof(MallocMetadata))/2)>=MIN_BLOCK_SIZE)&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
-        std::cout << "HERE-GOOD" << std::endl;
         size_t new_size = (tmp->size - sizeof(MallocMetadata))/2;
         tmp->size = new_size;
         curr = (char*)tmp;
         curr += new_size;
         new_curr = (MallocMetadata*)curr;
         new_curr->size = new_size;
-        std::cout << "new_curr->size: "<< new_curr->size << std::endl;
+        ++block_list->num_allocated_blocks;
+        block_list->allocated_bytes-=sizeof(MallocMetadata);
         free_block_manager->insert(new_curr);
     }
     return tmp;
