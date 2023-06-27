@@ -349,6 +349,10 @@ void* smalloc(size_t size){
             keep->set_cookie();
             keep->set_is_free(false);
             keep->set_size(size);
+
+            ++block_list->num_allocated_blocks;
+            block_list->allocated_bytes += size;
+
             return (keep+1);
         }
         else {
@@ -453,6 +457,8 @@ void sfree(void* p){
         else{ // used mmap
             size_t size_tmp = block->get_size();
             munmap((void*)block, size_tmp + sizeof(MallocMetadata));
+            --block_list->num_allocated_blocks;
+            block_list->allocated_bytes -= size_tmp;
             return;
         }
     }
