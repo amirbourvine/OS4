@@ -348,7 +348,9 @@ void* smalloc(size_t size){
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
             std::cout << "HERE1-SMALLOC\n";
             keep->set_cookie();
+            std::cout << "HERE1.1-SMALLOC\n";
             keep->set_is_free(false);
+            std::cout << "HERE1.2-SMALLOC\n";
             keep->set_size(size);
             std::cout << "HERE2-SMALLOC\n";
             return (keep+1);
