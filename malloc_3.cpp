@@ -295,6 +295,7 @@ void print()  {
     MallocMetadata* temp;
     if(block_list->free_block_manager== nullptr){
         std::cout << "free_block_manager is uninitialized!" << std::endl;
+        return;
     }
     std::cout << "***********************" << std::endl;
     for(int i = 0; i<NUM_ORDERS; i++) {
