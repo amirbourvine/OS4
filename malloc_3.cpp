@@ -76,12 +76,24 @@ public:
     }
 } MallocMetadata;
 
+typedef struct FreeBlocksManager {
+    MallocMetadata* lists[NUM_ORDERS];
+
+    FreeBlocksManager();
+
+    void insert(MallocMetadata* to_insert);
+    MallocMetadata* find(size_t size);//finds best fit for size 'size'
+    void remove(MallocMetadata* to_remove);
+} FreeBlocksManager;
+
 typedef struct BlocksList {
     MallocMetadata* first = nullptr;
     unsigned int num_free_blocks = 0;//number of allocated blocks in the heap that are currently free
     unsigned int num_allocated_blocks = 0;//overall (free and used) number of allocated blocks in the heap
     unsigned int allocated_bytes = 0; // overall number (free and used) of allocated bytes in the heap, does not include meta-data
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
+
+    FreeBlocksManager* free_block_manager;
 
     BlocksList(){
         srand(time(0));
@@ -97,6 +109,8 @@ void BlocksList::insert(MallocMetadata *to_insert) {
         this->first = to_insert;
         this->first->set_next(nullptr);
         this->first->set_prev(nullptr);
+
+        free_block_manager = new FreeBlocksManager();
 
         return;
     }
@@ -126,16 +140,6 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     temp->set_prev(to_insert);
     insert_after->set_next(to_insert);
 }
-
-typedef struct FreeBlocksManager {
-    MallocMetadata* lists[NUM_ORDERS];
-
-    FreeBlocksManager();
-
-    void insert(MallocMetadata* to_insert);
-    MallocMetadata* find(size_t size);//finds best fit for size 'size'
-    void remove(MallocMetadata* to_remove);
-} FreeBlocksManager;
 
 int size_to_ord(size_t size){
     //gets size of block (w\o meta-data)
@@ -206,13 +210,12 @@ FreeBlocksManager::FreeBlocksManager() {
 
 }
 
-FreeBlocksManager* free_block_manager = new FreeBlocksManager();
 
 MallocMetadata *FreeBlocksManager::find(size_t size) {
     int ord_start = size_to_ord(size);
     while(ord_start<=10){
-        if(free_block_manager->lists[ord_start]!= nullptr){
-            return free_block_manager->lists[ord_start];
+        if(block_list->free_block_manager->lists[ord_start]!= nullptr){
+            return block_list->free_block_manager->lists[ord_start];
         }
         ord_start++;
     }
@@ -227,12 +230,12 @@ void FreeBlocksManager::remove(MallocMetadata *to_remove) {
     int ord = size_to_ord(to_remove->get_size());
 
     if(to_remove->get_prev() == nullptr && to_remove->get_next() == nullptr) {//only
-        free_block_manager->lists[ord] = nullptr;
+        block_list->free_block_manager->lists[ord] = nullptr;
         return;
     }
 
     if(to_remove->get_prev() == nullptr){//first
-        free_block_manager->lists[ord] = to_remove->get_next();
+        block_list->free_block_manager->lists[ord] = to_remove->get_next();
         to_remove->get_next()->set_prev(nullptr);
         return;
     }
@@ -253,11 +256,11 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
     block_list->freed_bytes+=to_insert->get_size();
 
     int ord = size_to_ord(to_insert->get_size());
-    MallocMetadata* first = free_block_manager->lists[ord];
+    MallocMetadata* first = block_list->free_block_manager->lists[ord];
 
     MallocMetadata* temp = first;
     if(temp == nullptr){
-        free_block_manager->lists[ord] = to_insert;
+        block_list->free_block_manager->lists[ord] = to_insert;
         to_insert->set_next(nullptr);
         to_insert->set_prev(nullptr);
         return;
@@ -274,7 +277,7 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
         return;
     }
     if(temp==first){
-        free_block_manager->lists[ord] = to_insert;
+        block_list->free_block_manager->lists[ord] = to_insert;
         to_insert->set_next(temp);
         to_insert->set_prev(nullptr);
         temp->set_prev(to_insert);
@@ -293,7 +296,7 @@ void print()  {
     MallocMetadata* temp;
     std::cout << "***********************" << std::endl;
     for(int i = 0; i<NUM_ORDERS; i++) {
-        temp = free_block_manager->lists[i];
+        temp = block_list->free_block_manager->lists[i];
         bool flag = (temp!= nullptr);
         if(flag){
             std::cout << "# i: " << i << " #" << std::endl;
@@ -318,7 +321,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* tmp = init;
     MallocMetadata* new_curr;
     char* curr;
-    free_block_manager -> remove(init);
+    block_list->free_block_manager -> remove(init);
     while((((tmp->get_size() - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->get_size() - sizeof(MallocMetadata))/2 >= size)){
         size_t new_size = (tmp->get_size() - sizeof(MallocMetadata))/2;
         tmp->set_size(new_size);
@@ -328,7 +331,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         new_curr->set_size(new_size);
         ++block_list->num_allocated_blocks;
         block_list->allocated_bytes-=sizeof(MallocMetadata);
-        free_block_manager->insert(new_curr);
+        block_list->free_block_manager->insert(new_curr);
     }
     return tmp;
 }
@@ -337,7 +340,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
-    MallocMetadata* keep = free_block_manager->find(size);
+    MallocMetadata* keep = block_list->free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
         keep = break_block_down(keep, size);
         return (keep+1);
@@ -412,7 +415,7 @@ void sfree(void* p){
     if(!block->get_is_free()) {
         //Free Buddies
         while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
-            free_block_manager->insert(block);
+            block_list->free_block_manager->insert(block);
             MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
                                                         (block->get_size() + sizeof(MallocMetadata)));
             if (!buddy->get_is_free()) {
@@ -421,10 +424,12 @@ void sfree(void* p){
 
             //Buddy is also free
             if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
-                free_block_manager->remove(block);
-                free_block_manager->remove(buddy);
+                block_list->free_block_manager->remove(block);
+                block_list->free_block_manager->remove(buddy);
+                if((intptr_t)block > (intptr_t)buddy){
+                    block = buddy;
+                }
                 block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
-
             }
         }
     }
@@ -440,7 +445,7 @@ void sfree(void* p){
         if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
-                free_block_manager->insert(block);
+                block_list->free_block_manager->insert(block);
                 MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
                                                             (block->get_size() + sizeof(MallocMetadata)));
                 if (!buddy->get_is_free()) {
@@ -449,8 +454,8 @@ void sfree(void* p){
 
                 //Buddy is also free
                 if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
-                    free_block_manager->remove(block);
-                    free_block_manager->remove(buddy);
+                    block_list->free_block_manager->remove(block);
+                    block_list->free_block_manager->remove(buddy);
                     block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
 
                     --block_list->num_allocated_blocks;
@@ -479,6 +484,7 @@ void* srealloc(void* oldp, size_t size) {
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
 
+    //option a
     if(block->get_size() >= size){
         if(block->get_is_free()){
             block->set_is_free(false);
@@ -489,6 +495,10 @@ void* srealloc(void* oldp, size_t size) {
         return oldp;
     }
 
+    //option b
+
+
+    //option c
     void* allocated_block = smalloc(size);
 
     if(allocated_block == NULL)
