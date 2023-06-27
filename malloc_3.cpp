@@ -18,7 +18,7 @@
 #define ALIGN (128*1024*32)
 #define MIN_BLOCK_SIZE (128)
 
-size_t global_cookie;
+size_t global_cookie = 0;
 
 typedef struct MallocMetadata {
 private:
@@ -171,6 +171,10 @@ FreeBlocksManager::FreeBlocksManager() {
     char* curr;
 
     MallocMetadata* tmp = (MallocMetadata*)start;
+    if(global_cookie == 0){
+        std::cout << "VERY BAD\n";
+        std::cout << "global_cookie: " << global_cookie << std::endl;
+    }
     tmp->set_is_free(true);
     tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
     tmp->set_prev(nullptr);
