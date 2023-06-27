@@ -415,28 +415,6 @@ void sfree(void* p){
     block -= 1;
 
     if(!block->get_is_free()) {
-        //Free Buddies
-        while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
-            block_list->free_block_manager->insert(block);
-            MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
-                                                        (block->get_size() + sizeof(MallocMetadata)));
-            if (!buddy->get_is_free()) {
-                break;
-            }
-
-            //Buddy is also free
-            if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
-                block_list->free_block_manager->remove(block);
-                block_list->free_block_manager->remove(buddy);
-                if((intptr_t)block > (intptr_t)buddy){
-                    block = buddy;
-                }
-                block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
-            }
-        }
-    }
-
-    if(!block->get_is_free()) {
 
         if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
@@ -452,14 +430,14 @@ void sfree(void* p){
                 if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
                     block_list->free_block_manager->remove(block);
                     block_list->free_block_manager->remove(buddy);
+                    if((intptr_t)block > (intptr_t)buddy){
+                        block = buddy;
+                    }
                     block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
 
                     --block_list->num_allocated_blocks;
                     block_list->allocated_bytes += sizeof(MallocMetadata);
-                } else {
-                    break;
                 }
-
             }
         }
         else{ // used mmap
