@@ -419,7 +419,6 @@ void sfree(void* p){
         if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
-                std::cout << "order: " << size_to_ord(block->get_size())  << std::endl;
                 block_list->free_block_manager->insert(block);
                 MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
                                                             (block->get_size() + sizeof(MallocMetadata)));
@@ -470,35 +469,35 @@ void* srealloc(void* oldp, size_t size) {
         size_t min_size = size >  block->get_size() ? block->get_size() : size;
         memmove(allocated_block, oldp, min_size);
         sfree(oldp);
+
+        return allocated_block;
     }
     else{//not an mmaped block
+        //option a
+        if(block->get_size() >= size){
+            if(block->get_is_free()){
+                block->set_is_free(false);
+                --block_list->num_free_blocks;
+                block_list->freed_bytes -= block->get_size();
+            }
 
-    }
-
-    //option a
-    if(block->get_size() >= size){
-        if(block->get_is_free()){
-            block->set_is_free(false);
-            --block_list->num_free_blocks;
-            block_list->freed_bytes -= block->get_size();
+            return oldp;
         }
 
-        return oldp;
+        //option b
+
+
+        //option c
+        void* allocated_block = smalloc(size);
+
+        if(allocated_block == NULL)
+            return NULL;
+
+        memmove(allocated_block, oldp, block->get_size());
+        sfree(oldp);
+
+        return allocated_block;
     }
-
-    //option b
-
-
-    //option c
-    void* allocated_block = smalloc(size);
-
-    if(allocated_block == NULL)
-        return NULL;
-
-    memmove(allocated_block, oldp, size);
-    sfree(oldp);
-
-    return allocated_block;
 }
 
 

@@ -203,7 +203,7 @@ void* srealloc(void* oldp, size_t size) {
     if(allocated_block == NULL)
         return NULL;
 
-    memmove(allocated_block, oldp, size);
+    memmove(allocated_block, oldp, block->size);
     sfree(oldp);
 
     return allocated_block;
