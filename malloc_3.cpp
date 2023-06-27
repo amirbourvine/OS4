@@ -469,20 +469,12 @@ void* srealloc(void* oldp, size_t size) {
         if(size==block->get_size())
             return oldp;
 
-        std::cout << "HERE1\n";
-
         void* allocated_block = smalloc(size);
-
-        std::cout << "HERE2\n";
 
         size_t min_size = size >  block->get_size() ? block->get_size() : size;
         memmove(allocated_block, oldp, min_size);
 
-        std::cout << "HERE3\n";
-
         sfree(oldp);
-
-        std::cout << "HERE4\n";
 
         return allocated_block;
     }
