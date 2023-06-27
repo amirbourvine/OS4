@@ -344,10 +344,13 @@ void* smalloc(size_t size){
     }
     else{ // did not find a block
         if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
+            std::cout << "HERE0-SMALLOC\n";
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
+            std::cout << "HERE0-SMALLOC\n";
             keep->set_cookie();
             keep->set_is_free(false);
             keep->set_size(size);
+            std::cout << "HERE0-SMALLOC\n";
             return (keep+1);
         }
         else {
