@@ -376,6 +376,7 @@ void sfree(void* p){
             std::cout << "HERE1" << std::endl;
             munmap((void*)block, size_tmp + sizeof(MallocMetadata));
             std::cout << "HERE2" << std::endl;
+            return;
         }
     }
 }
