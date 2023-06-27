@@ -4,6 +4,7 @@
 #include "header_2.h"
 int main(){
     print();
+    std::cout << "HERE0-MAIN" << std::endl;
     int* b1 = (int*)smalloc((128 * 1024));
     print();
     std::cout << "HERE1-MAIN" << std::endl;

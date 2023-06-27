@@ -176,9 +176,6 @@ FreeBlocksManager::FreeBlocksManager() {
 
     MallocMetadata* tmp = (MallocMetadata*)start;
 
-    std::cout << "HERE-OK" << std::endl;
-    std::cout << "global_cookie: " << global_cookie << std::endl;
-
     tmp->set_cookie();
     tmp->set_is_free(true);
     tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
@@ -187,8 +184,6 @@ FreeBlocksManager::FreeBlocksManager() {
     MallocMetadata* keep = tmp;
 
     this->lists[NUM_ORDERS-1] = tmp;
-
-    std::cout << "HERE-GOOD" << std::endl;
 
     for(int i = 1; i<INITIAL_BLOCKS_NUM; i++){
         curr = (char*)tmp;
@@ -203,8 +198,6 @@ FreeBlocksManager::FreeBlocksManager() {
 
         keep = tmp;
     }
-
-    std::cout << "HERE-EXCELENT" << std::endl;
 
     block_list->num_allocated_blocks = INITIAL_BLOCKS_NUM;
     block_list->allocated_bytes = INITIAL_BLOCKS_NUM*(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
