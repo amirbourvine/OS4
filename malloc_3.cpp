@@ -151,7 +151,7 @@ FreeBlocksManager* free_block_manager = new FreeBlocksManager();
 
 MallocMetadata *FreeBlocksManager::find(size_t size) {
     int ord_start = size_to_ord(size);
-
+    std::cout<< "ord: " << ord_start << std::endl;
     while(ord_start<=10){
         if(free_block_manager->lists[ord_start]!= nullptr){
             return free_block_manager->lists[ord_start];
