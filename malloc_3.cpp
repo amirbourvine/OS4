@@ -142,7 +142,6 @@ void BlocksList::insert(MallocMetadata *to_insert) {
 
 int size_to_ord(size_t size){
     //gets size of block (w\o meta-data)
-    std::cout << "size: " << size  << std::endl;
     return (int)ceil(log2((double)(size + sizeof(MallocMetadata))/128));
 }
 
@@ -432,9 +431,9 @@ void sfree(void* p){
                 if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
                     block_list->free_block_manager->remove(block);
                     block_list->free_block_manager->remove(buddy);
-                    if((intptr_t)block > (intptr_t)buddy){
-                        block = buddy;
-                    }
+//                    if((intptr_t)block > (intptr_t)buddy){
+//                        block = buddy;
+//                    }
                     block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
 
                     --block_list->num_allocated_blocks;
