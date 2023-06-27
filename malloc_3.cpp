@@ -331,6 +331,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
         curr = (char*)tmp;
         curr += new_size + sizeof(MallocMetadata);
         new_curr = (MallocMetadata*)curr;
+        new_curr->set_cookie();
         new_curr->set_size(new_size);
         ++block_list->num_allocated_blocks;
         block_list->allocated_bytes-=sizeof(MallocMetadata);
