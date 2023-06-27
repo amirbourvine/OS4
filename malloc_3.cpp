@@ -5,7 +5,8 @@
 #include <iostream>
 #include <cstring>
 #include <math.h>
-#include <sys/mman.h>
+#include <ctime>
+#include <cstdlib>
 
 #include "tests/header_2.h"
 
@@ -16,11 +17,58 @@
 #define ALIGN (128*1024*32)
 #define MIN_BLOCK_SIZE (128)
 
+size_t global_cookie;
+
 typedef struct MallocMetadata {
+private:
+    size_t cookie;
     size_t size; //does not include meta-data
     bool is_free;
     MallocMetadata* next;
     MallocMetadata* prev;
+
+    void check_cookie() const{
+        if(this->cookie != global_cookie){
+            exit(0xdeadbeef);
+        }
+    }
+
+public:
+    size_t get_size() const{
+        this->check_cookie();
+        return this->size;
+    }
+    void set_size(size_t size){
+        this->check_cookie();
+        this->size = size;
+    }
+
+    bool get_is_free() const{
+        this->check_cookie();
+        return this->is_free;
+    }
+    void set_is_free(size_t is_free){
+        this->check_cookie();
+        this->is_free = is_free;
+    }
+
+    MallocMetadata* get_prev() const{
+        this->check_cookie();
+        return this->prev;
+    }
+    void set_prev(MallocMetadata* prev){
+        this->check_cookie();
+        this->prev = prev;
+    }
+
+    MallocMetadata* get_next() const{
+        this->check_cookie();
+        return this->prev;
+    }
+    void set_next(MallocMetadata* next){
+        this->check_cookie();
+        this->next = next;
+    }
 } MallocMetadata;
 
 typedef struct BlocksList {
@@ -30,6 +78,11 @@ typedef struct BlocksList {
     unsigned int allocated_bytes = 0; // overall number (free and used) of allocated bytes in the heap, does not include meta-data
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
+    BlocksList(){
+        srand(time(0));
+        global_cookie = rand() % sizeof(SIZE_MAX);
+    }
+
     void insert(MallocMetadata* to_insert);
 } BlocksList;
 
@@ -37,41 +90,40 @@ void BlocksList::insert(MallocMetadata *to_insert) {
     MallocMetadata* temp = this->first;
     if(temp == nullptr){
         this->first = to_insert;
-        this->first->next = nullptr;
-        this->first->prev = nullptr;
+        this->first->set_next(nullptr);
+        this->first->set_prev(nullptr);
 
         return;
     }
     while(temp!=nullptr && to_insert > temp){
-        temp = temp->next;
+        temp = temp->get_next();
     }
     if(temp== nullptr){//insert last
         MallocMetadata* last = this->first;
-        while(last->next!= nullptr){ last = last->next; }
-        last->next = to_insert;
-        to_insert->next = nullptr;
-        to_insert->prev = last;
+        while(last->get_next() != nullptr){ last = last->get_next(); }
+        last->set_next(to_insert);
+        to_insert->set_next(nullptr);
+        to_insert->set_prev(last);
         return;
     }
     if(temp==this->first){
         this->first = to_insert;
-        to_insert->next = temp;
-        to_insert->prev = nullptr;
-        temp->prev = to_insert;
+        to_insert->set_next(temp);
+        to_insert->set_prev(nullptr);
+        temp->set_prev(to_insert);
         return;
     }
 
     //regular insertion
-    MallocMetadata* insert_after = temp->prev;
-    to_insert->next = temp;
-    to_insert->prev = insert_after;
-    temp->prev = to_insert;
-    insert_after->next = to_insert;
+    MallocMetadata* insert_after = temp->get_prev();
+    to_insert->set_next(temp);
+    to_insert->set_prev(insert_after);
+    temp->set_prev(to_insert);
+    insert_after->set_next(to_insert);
 }
 
 typedef struct FreeBlocksManager {
     MallocMetadata* lists[NUM_ORDERS];
-
 
     FreeBlocksManager();
 
@@ -118,9 +170,9 @@ FreeBlocksManager::FreeBlocksManager() {
     char* curr;
 
     MallocMetadata* tmp = (MallocMetadata*)start;
-    tmp->is_free = true;
-    tmp->size = INITIAL_BLOCK_SIZE-sizeof(MallocMetadata);
-    tmp->prev = nullptr;
+    tmp->set_is_free(true);
+    tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
+    tmp->set_prev(nullptr);
 
     MallocMetadata* keep = tmp;
 
@@ -131,10 +183,10 @@ FreeBlocksManager::FreeBlocksManager() {
         curr += INITIAL_BLOCK_SIZE;
         tmp = (MallocMetadata*)curr;
 
-        tmp->is_free = true;
-        tmp->size = INITIAL_BLOCK_SIZE-sizeof(MallocMetadata);
-        tmp->prev = keep;
-        keep->next = tmp;
+        tmp->set_is_free(true);
+        tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
+        tmp->set_prev(keep);
+        keep->set_next(tmp);
 
         keep = tmp;
     }
@@ -161,73 +213,73 @@ MallocMetadata *FreeBlocksManager::find(size_t size) {
 }
 
 void FreeBlocksManager::remove(MallocMetadata *to_remove) {
-    to_remove->is_free = false;
+    to_remove->set_is_free(false);
     --block_list->num_free_blocks;
     block_list->freed_bytes-=to_remove->size;
 
     int ord = size_to_ord(to_remove->size);
 
-    if(to_remove->prev == nullptr && to_remove->next == nullptr) {//only
+    if(to_remove->get_prev() == nullptr && to_remove->get_next() == nullptr) {//only
         free_block_manager->lists[ord] = nullptr;
         return;
     }
 
-    if(to_remove->prev == nullptr){//first
-        free_block_manager->lists[ord] = to_remove->next;
-        to_remove->next->prev = nullptr;
+    if(to_remove->get_prev() == nullptr){//first
+        free_block_manager->lists[ord] = to_remove->get_next();
+        to_remove->get_next()->set_prev(nullptr);
         return;
     }
-    if(to_remove->next == nullptr){//last
-        to_remove->prev->next = nullptr;
+    if(to_remove->get_next() == nullptr){//last
+        to_remove->get_prev()->set_next(nullptr);
         return;
     }
-    MallocMetadata *before = to_remove->prev;
-    MallocMetadata *after = to_remove->next;
-    before->next = after;
-    after->prev = before;
+    MallocMetadata *before = to_remove->get_prev();
+    MallocMetadata *after = to_remove->get_next();
+    before->set_next(after);
+    after->set_prev(before);
 }
 
 void FreeBlocksManager::insert(MallocMetadata *to_insert) {
 
-    to_insert->is_free = true;
+    to_insert->set_is_free(true);
     ++block_list->num_free_blocks;
-    block_list->freed_bytes+=to_insert->size;
+    block_list->freed_bytes+=to_insert->get_size();
 
-    int ord = size_to_ord(to_insert->size);
+    int ord = size_to_ord(to_insert->get_size());
     MallocMetadata* first = free_block_manager->lists[ord];
 
     MallocMetadata* temp = first;
     if(temp == nullptr){
         free_block_manager->lists[ord] = to_insert;
-        to_insert->next = nullptr;
-        to_insert->prev = nullptr;
+        to_insert->set_next(nullptr);
+        to_insert->set_prev(nullptr);
         return;
     }
     while(temp!=nullptr && to_insert > temp){
-        temp = temp->next;
+        temp = temp->get_next();
     }
     if(temp == nullptr){//insert last
         MallocMetadata* last = first;
-        while(last->next!= nullptr){ last = last->next; }
-        last->next = to_insert;
-        to_insert->next = nullptr;
-        to_insert->prev = last;
+        while(last->get_next() != nullptr){ last = last->get_next(); }
+        last->set_next(to_insert);
+        to_insert->set_next(nullptr);
+        to_insert->set_prev(last);
         return;
     }
     if(temp==first){
         free_block_manager->lists[ord] = to_insert;
-        to_insert->next = temp;
-        to_insert->prev = nullptr;
-        temp->prev = to_insert;
+        to_insert->set_next(temp);
+        to_insert->set_prev(nullptr);
+        temp->set_prev(to_insert);
         return;
     }
 
     //regular insertion
-    MallocMetadata* insert_after = temp->prev;
-    to_insert->next = temp;
-    to_insert->prev = insert_after;
-    temp->prev = to_insert;
-    insert_after->next = to_insert;
+    MallocMetadata* insert_after = temp->get_prev();
+    to_insert->set_next(temp);
+    to_insert->set_prev(insert_after);
+    temp->set_prev(to_insert);
+    insert_after->set_next(to_insert);
 }
 
 void print()  {
@@ -240,8 +292,8 @@ void print()  {
             std::cout << "# i: " << i << " #" << std::endl;
         }
         while (temp != nullptr) {
-            std::cout << "  SIZE: " << temp->size;
-            temp = temp->next;
+            std::cout << "  SIZE: " << temp->get_size();
+            temp = temp->get_next();
         }
         if(flag){
             std::cout << std::endl;
@@ -260,13 +312,13 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* new_curr;
     char* curr;
     free_block_manager -> remove(init);
-    while((((tmp->size - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->size - sizeof(MallocMetadata))/2 >= size)){
-        size_t new_size = (tmp->size - sizeof(MallocMetadata))/2;
-        tmp->size = new_size;
+    while((((tmp->get_size() - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->get_size() - sizeof(MallocMetadata))/2 >= size)){
+        size_t new_size = (tmp->get_size() - sizeof(MallocMetadata))/2;
+        tmp->set_size(new_size);
         curr = (char*)tmp;
         curr += new_size + sizeof(MallocMetadata);
         new_curr = (MallocMetadata*)curr;
-        new_curr->size = new_size;
+        new_curr->set_size(new_size);
         ++block_list->num_allocated_blocks;
         block_list->allocated_bytes-=sizeof(MallocMetadata);
         free_block_manager->insert(new_curr);
@@ -338,6 +390,22 @@ void sfree(void* p){
     MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
 
+<<<<<<< HEAD
+    if(!block->get_is_free()) {
+        //Free Buddies
+        while(size_to_ord(block->get_size()) <= NUM_ORDERS - 1){
+            free_block_manager->insert(block);
+            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
+            if(!buddy->get_is_free()){
+                break;
+            }
+
+            //Buddy is also free
+            if(NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
+                free_block_manager->remove(block);
+                free_block_manager->remove(buddy);
+                block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
+=======
     std::cout << "HERE2" << std::endl;
 
     if(!block->is_free) {
@@ -368,6 +436,7 @@ void sfree(void* p){
                 } else {
                     break;
                 }
+>>>>>>> origin/main
 
             }
         }
@@ -389,11 +458,11 @@ void* srealloc(void* oldp, size_t size) {
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
 
-    if(block->size >= size){
-        if(block->is_free){
-            block->is_free = false;
+    if(block->get_size() >= size){
+        if(block->get_is_free()){
+            block->set_is_free(false);
             --block_list->num_free_blocks;
-            block_list->freed_bytes -= block->size;
+            block_list->freed_bytes -= block->get_size();
         }
 
         return oldp;
