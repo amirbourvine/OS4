@@ -93,6 +93,7 @@ typedef struct BlocksList {
     unsigned int allocated_bytes = 0; // overall number (free and used) of allocated bytes in the heap, does not include meta-data
     unsigned int freed_bytes = 0; //number of bytes in all allocated blocks in the heap that are currently free, does not include meta-data
 
+    bool is_first = true;
     FreeBlocksManager* free_block_manager;
 
     BlocksList(){
@@ -109,8 +110,6 @@ void BlocksList::insert(MallocMetadata *to_insert) {
         this->first = to_insert;
         this->first->set_next(nullptr);
         this->first->set_prev(nullptr);
-
-        free_block_manager = new FreeBlocksManager();
 
         return;
     }
@@ -338,6 +337,10 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 
 
 void* smalloc(size_t size){
+    if(block_list->is_first){
+        block_list->is_first = false;
+        block_list->free_block_manager = new FreeBlocksManager();
+    }
     if(size==0 or size>MAX_SIZE)
         return NULL;
     MallocMetadata* keep = block_list->free_block_manager->find(size);
