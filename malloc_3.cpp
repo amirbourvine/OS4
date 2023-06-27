@@ -350,6 +350,7 @@ void* smalloc(size_t size){
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
             std::cout << "HERE1-SMALLOC\n";
             std::cout << "keep: "<<(intptr_t)keep<<std::endl;
+            std::cout << "errno: "<<errno<<std::endl;
             keep->set_cookie();
             std::cout << "HERE1.1-SMALLOC\n";
             keep->set_is_free(false);
