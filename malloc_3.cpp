@@ -344,19 +344,11 @@ void* smalloc(size_t size){
     }
     else{ // did not find a block
         if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
-            std::cout << "HERE0-SMALLOC\n";
-            std::cout << "TOTAL SIZE: "<<size+ sizeof(MallocMetadata)<<std::endl;
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE,-1, 0);
-            std::cout << "HERE1-SMALLOC\n";
-            std::cout << "keep: "<<(intptr_t)keep<<std::endl;
-            std::cout << "errno: "<<errno<<std::endl;
             keep->set_cookie();
-            std::cout << "HERE1.1-SMALLOC\n";
             keep->set_is_free(false);
-            std::cout << "HERE1.2-SMALLOC\n";
             keep->set_size(size);
-            std::cout << "HERE2-SMALLOC\n";
             return (keep+1);
         }
         else {
@@ -404,8 +396,6 @@ void sfree(void* p){
     if(p == NULL)
         return;
 
-    std::cout << "HERE1" << std::endl;
-
     MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
 
@@ -428,7 +418,6 @@ void sfree(void* p){
             }
         }
     }
-    std::cout << "HERE2" << std::endl;
 
     if(!block->get_is_free()) {
 
@@ -463,9 +452,7 @@ void sfree(void* p){
         }
         else{ // used mmap
             size_t size_tmp = block->get_size();
-            std::cout << "HERE1" << std::endl;
             munmap((void*)block, size_tmp + sizeof(MallocMetadata));
-            std::cout << "HERE2" << std::endl;
             return;
         }
     }
