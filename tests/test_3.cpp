@@ -4,8 +4,9 @@
 #include "header_2.h"
 int main(){
     print();
-    void* b1 = smalloc((88));
-    std::cout << "HERE1-MAIN\n";
+    void* b1 = smalloc((50));
+    print();
+    srealloc(b1, 50);
     print();
     sfree(b1);
     print();
