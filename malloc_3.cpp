@@ -64,7 +64,7 @@ public:
 
     MallocMetadata* get_next() const{
         this->check_cookie();
-        return this->prev;
+        return this->next;
     }
     void set_next(MallocMetadata* next){
         this->check_cookie();
