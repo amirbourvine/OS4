@@ -5,6 +5,7 @@
 #include <iostream>
 #include <cstring>
 #include <math.h>
+#include <sys/mman.h>
 
 #include "tests/header_2.h"
 
@@ -284,7 +285,13 @@ void* smalloc(size_t size){
         return (keep+1);
     }
     else{ // did not find a block
-        perror("BLOCK NOT FOUND");
+        if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
+            keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
+            return (keep+1);
+        }
+        else {
+            perror("BLOCK NOT FOUND");
+        }
     }
 }
 
@@ -331,27 +338,38 @@ void sfree(void* p){
     block -= 1;
 
     if(!block->is_free) {
-        //Free Buddies
-        while(size_to_ord(block->size) <= NUM_ORDERS - 1){
-            free_block_manager->insert(block);
-            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
-            if(!buddy->is_free){
-                break;
-            }
 
-            //Buddy is also free
-            if(NUM_ORDERS - 1!=size_to_ord(block->size)) {
-                free_block_manager->remove(block);
-                free_block_manager->remove(buddy);
-                block->size = block->size * 2 + sizeof(MallocMetadata);
+       // if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
+            //keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
+           // return (keep+1);
+       // }
 
-                --block_list->num_allocated_blocks;
-                block_list->allocated_bytes += sizeof(MallocMetadata);
-            }
-            else{
-                break;
-            }
+        if(block->size<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
+            //Free Buddies
+            while (size_to_ord(block->size) <= NUM_ORDERS - 1) {
+                free_block_manager->insert(block);
+                MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
+                                                            (block->size + sizeof(MallocMetadata)));
+                if (!buddy->is_free) {
+                    break;
+                }
 
+                //Buddy is also free
+                if (NUM_ORDERS - 1 != size_to_ord(block->size)) {
+                    free_block_manager->remove(block);
+                    free_block_manager->remove(buddy);
+                    block->size = block->size * 2 + sizeof(MallocMetadata);
+
+                    --block_list->num_allocated_blocks;
+                    block_list->allocated_bytes += sizeof(MallocMetadata);
+                } else {
+                    break;
+                }
+
+            }
+        }
+        else{ // used mmap
+            munmap((void*)block, block->size+ sizeof(MallocMetadata));
         }
     }
 }

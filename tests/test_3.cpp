@@ -4,8 +4,9 @@
 #include "header_2.h"
 int main(){
     print();
-    void* b1 = smalloc(96);
+    int* b1 = (int*)smalloc((128 * 1024));
     print();
+    b1[0] = 1;
     sfree(b1);
     print();
 }
