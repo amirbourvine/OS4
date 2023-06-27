@@ -293,6 +293,9 @@ void FreeBlocksManager::insert(MallocMetadata *to_insert) {
 
 void print()  {
     MallocMetadata* temp;
+    if(block_list->free_block_manager== nullptr){
+        std::cout << "free_block_manager is uninitialized!" << std::endl;
+    }
     std::cout << "***********************" << std::endl;
     for(int i = 0; i<NUM_ORDERS; i++) {
         temp = block_list->free_block_manager->lists[i];
