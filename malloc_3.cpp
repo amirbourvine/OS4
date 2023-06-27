@@ -437,11 +437,6 @@ void sfree(void* p){
 
     if(!block->get_is_free()) {
 
-       // if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
-            //keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
-           // return (keep+1);
-       // }
-
         if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
@@ -483,6 +478,19 @@ void* srealloc(void* oldp, size_t size) {
 
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
+
+    if(block->get_size()>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){//mmaped block
+        if(size==block->get_size())
+            return oldp;
+
+        void* allocated_block = smalloc(size);
+        size_t min_size = size >  block->get_size() ? block->get_size() : size;
+        memmove(allocated_block, oldp, min_size);
+        sfree(oldp);
+    }
+    else{//not an mmaped block
+
+    }
 
     //option a
     if(block->get_size() >= size){
