@@ -347,7 +347,7 @@ void* smalloc(size_t size){
             std::cout << "HERE0-SMALLOC\n";
             std::cout << "TOTAL SIZE: "<<size+ sizeof(MallocMetadata)<<std::endl;
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
-                                         PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
+                                         PROT_READ|PROT_WRITE, MAP_PRIVATE,-1, 0);
             std::cout << "HERE1-SMALLOC\n";
             if(keep== nullptr){
                 std::cout << "mmap PROBLEM-SMALLOC\n";
