@@ -491,7 +491,6 @@ void* srealloc(void* oldp, size_t size) {
         }
 
         //option b
-        std::cout << "OPTION B\n";
         //check
         MallocMetadata *tmp = block;
         bool found = false;
@@ -519,9 +518,7 @@ void* srealloc(void* oldp, size_t size) {
                 break;
             }
         }
-        std::cout << "OPTION B-HERE0\n";
         if(!found){
-            std::cout << "OPTION B-HERE BAD\n";
             //option c
             void* allocated_block = smalloc(size);
             if(allocated_block == NULL)
@@ -531,7 +528,6 @@ void* srealloc(void* oldp, size_t size) {
             return allocated_block;
         }
         else{//use the found block
-            std::cout << "OPTION B-HERE1\n";
             int max_ord = size_to_ord(curr_size);
             MallocMetadata *keep_block = block;
 
@@ -556,11 +552,8 @@ void* srealloc(void* oldp, size_t size) {
                     break;
                 }
             }
-            std::cout << "OPTION B-HERE2\n";
             memmove(block, oldp, keep_block->get_size());
-            std::cout << "OPTION B-HERE2.5\n";
-            sfree(oldp);
-            std::cout << "OPTION B-HERE3\n";
+            //do not need to free oldp cause its a part of the block now
             return block;
         }
     }
