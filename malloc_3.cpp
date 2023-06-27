@@ -343,9 +343,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 void* smalloc(size_t size){
     if(block_list->is_first){
         block_list->is_first = false;
-        std::cout << "HERE1\n";
         block_list->free_block_manager = new FreeBlocksManager();
-        std::cout << "HERE2\n";
     }
     if(size==0 or size>MAX_SIZE)
         return NULL;

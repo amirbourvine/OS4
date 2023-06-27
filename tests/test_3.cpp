@@ -5,6 +5,7 @@
 int main(){
     print();
     void* b1 = smalloc((128));
+    std::cout << "HERE1-MAIN\n";
     print();
     sfree(b1);
     print();
