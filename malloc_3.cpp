@@ -431,13 +431,16 @@ void sfree(void* p){
                 if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
                     block_list->free_block_manager->remove(block);
                     block_list->free_block_manager->remove(buddy);
-//                    if((intptr_t)block > (intptr_t)buddy){
-//                        block = buddy;
-//                    }
+                    if((intptr_t)block > (intptr_t)buddy){
+                        block = buddy;
+                    }
                     block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
 
                     --block_list->num_allocated_blocks;
                     block_list->allocated_bytes += sizeof(MallocMetadata);
+                }
+                else{
+                    break;
                 }
             }
         }
