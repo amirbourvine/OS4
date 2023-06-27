@@ -461,6 +461,10 @@ void* srealloc(void* oldp, size_t size) {
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
 
+    if(block->get_is_free()){
+        return smalloc(size);
+    }
+
     if(block->get_size()>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){//mmaped block
         if(size==block->get_size())
             return oldp;
@@ -486,17 +490,71 @@ void* srealloc(void* oldp, size_t size) {
 
         //option b
 
+        //check
+        MallocMetadata *tmp = block;
+        bool found = false;
+        size_t curr_size = tmp->get_size();
+        while (size_to_ord(curr_size) <= NUM_ORDERS - 1) {
+            if(curr_size>=size){
+                found = true;
+                break;
+            }
 
-        //option c
-        void* allocated_block = smalloc(size);
+            MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) tmp) ^
+                                                        (curr_size + sizeof(MallocMetadata)));
+            if (!buddy->get_is_free()) {
+                break;
+            }
 
-        if(allocated_block == NULL)
-            return NULL;
+            //Buddy is also free
+            if (NUM_ORDERS - 1 != size_to_ord(curr_size)) {
+                if((intptr_t)tmp > (intptr_t)buddy){
+                    tmp = buddy;
+                }
+                curr_size = curr_size * 2 + sizeof(MallocMetadata);
+            }
+            else{
+                break;
+            }
+        }
+        if(!found){
+            //option c
+            void* allocated_block = smalloc(size);
+            if(allocated_block == NULL)
+                return NULL;
+            memmove(allocated_block, oldp, block->get_size());
+            sfree(oldp);
+            return allocated_block;
+        }
+        else{//use the found block
+            int max_ord = size_to_ord(curr_size);
+            MallocMetadata *keep_block = block;
 
-        memmove(allocated_block, oldp, block->get_size());
-        sfree(oldp);
+            while (size_to_ord(block->get_size()) <= max_ord) {
+                if (max_ord != size_to_ord(block->get_size())) {
+                    block_list->free_block_manager->insert(block);
+                    MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
+                            (block->get_size() + sizeof(MallocMetadata)));
 
-        return allocated_block;
+                    //Buddy is also free
+
+                    block_list->free_block_manager->remove(block);
+                    block_list->free_block_manager->remove(buddy);
+                    if ((intptr_t) block > (intptr_t) buddy) {
+                        block = buddy;
+                    }
+                    block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
+
+                    --block_list->num_allocated_blocks;
+                    block_list->allocated_bytes += sizeof(MallocMetadata);
+                } else {
+                    break;
+                }
+            }
+            memmove(block, oldp, keep_block->get_size());
+            sfree(oldp);
+            return block;
+        }
     }
 }
 
