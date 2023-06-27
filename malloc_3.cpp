@@ -419,6 +419,7 @@ void sfree(void* p){
         if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
+                std::cout << "order: " << size_to_ord(block->get_size())  << std::endl;
                 block_list->free_block_manager->insert(block);
                 MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
                                                             (block->get_size() + sizeof(MallocMetadata)));
