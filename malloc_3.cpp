@@ -281,11 +281,13 @@ void* smalloc(size_t size){
         return NULL;
     MallocMetadata* keep = free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
+        std::cout << "BAD" << std::endl;
         keep = break_block_down(keep, size);
         return (keep+1);
     }
     else{ // did not find a block
         if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
+            std::cout << "GOOD" << std::endl;
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
             return (keep+1);
         }
