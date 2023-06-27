@@ -390,22 +390,23 @@ void sfree(void* p){
     MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
 
-<<<<<<< HEAD
     if(!block->get_is_free()) {
         //Free Buddies
-        while(size_to_ord(block->get_size()) <= NUM_ORDERS - 1){
+        while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
             free_block_manager->insert(block);
-            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
-            if(!buddy->get_is_free()){
+            MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^ (block->size + sizeof(MallocMetadata)));
+            if (!buddy->get_is_free()) {
                 break;
             }
 
             //Buddy is also free
-            if(NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
+            if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
                 free_block_manager->remove(block);
                 free_block_manager->remove(buddy);
                 block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
-=======
+            }
+        }
+    }
     std::cout << "HERE2" << std::endl;
 
     if(!block->is_free) {
