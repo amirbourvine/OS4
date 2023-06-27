@@ -82,6 +82,11 @@ typedef struct FreeBlocksManager {
 
 int size_to_ord(size_t size){
     //gets size of block (w\o meta-data)
+    std::cout<< "size: " << size << std::endl;
+    std::cout<< "(size + sizeof(MallocMetadata))/128: " << (size + sizeof(MallocMetadata))/128 << std::endl;
+    std::cout<< "log2((size + sizeof(MallocMetadata))/128): " << log2((size + sizeof(MallocMetadata))/128) << std::endl;
+    std::cout<< "ceil(log2((size + sizeof(MallocMetadata))/128)): " << ceil(log2((size + sizeof(MallocMetadata))/128)) << std::endl;
+
     return (int)ceil(log2((size + sizeof(MallocMetadata))/128));
 }
 
