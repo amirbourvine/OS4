@@ -87,7 +87,7 @@ int size_to_ord(size_t size){
     std::cout<< "log2((size + sizeof(MallocMetadata))/128): " << log2((size + sizeof(MallocMetadata))/128) << std::endl;
     std::cout<< "ceil(log2((size + sizeof(MallocMetadata))/128)): " << ceil(log2((size + sizeof(MallocMetadata))/128)) << std::endl;
 
-    return (int)ceil(log2((size + sizeof(MallocMetadata))/128));
+    return (int)ceil(log2((double)(size + sizeof(MallocMetadata))/128));
 }
 
 void* use_sbrk(size_t size){
