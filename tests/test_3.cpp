@@ -10,5 +10,6 @@ int main(){
     //b1[0] = 1;
     std::cout << "HERE2-MAIN" << std::endl;
     sfree(b1);
+    std::cout << "HERE3-MAIN" << std::endl;
     print();
 }
