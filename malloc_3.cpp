@@ -82,11 +82,6 @@ typedef struct FreeBlocksManager {
 
 int size_to_ord(size_t size){
     //gets size of block (w\o meta-data)
-    std::cout<< "size: " << size << std::endl;
-    std::cout<< "(size + sizeof(MallocMetadata))/128: " << (size + sizeof(MallocMetadata))/128 << std::endl;
-    std::cout<< "log2((size + sizeof(MallocMetadata))/128): " << log2((size + sizeof(MallocMetadata))/128) << std::endl;
-    std::cout<< "ceil(log2((size + sizeof(MallocMetadata))/128)): " << ceil(log2((size + sizeof(MallocMetadata))/128)) << std::endl;
-
     return (int)ceil(log2((double)(size + sizeof(MallocMetadata))/128));
 }
 
@@ -156,7 +151,6 @@ FreeBlocksManager* free_block_manager = new FreeBlocksManager();
 
 MallocMetadata *FreeBlocksManager::find(size_t size) {
     int ord_start = size_to_ord(size);
-    std::cout<< "ord: " << ord_start << std::endl;
     while(ord_start<=10){
         if(free_block_manager->lists[ord_start]!= nullptr){
             return free_block_manager->lists[ord_start];
@@ -284,16 +278,13 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
-    std::cout << "size: " << size << std::endl;
     MallocMetadata* keep = free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
-        std::cout << "BAD" << std::endl;
         keep = break_block_down(keep, size);
         return (keep+1);
     }
     else{ // did not find a block
         if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
-            std::cout << "GOOD" << std::endl;
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
             return (keep+1);
         }
@@ -377,7 +368,10 @@ void sfree(void* p){
             }
         }
         else{ // used mmap
-            munmap((void*)block, block->size+ sizeof(MallocMetadata));
+            size_t size_tmp = block->size;
+            std::cout << "HERE1" << std::endl;
+            munmap((void*)block, size_tmp + sizeof(MallocMetadata));
+            std::cout << "HERE2" << std::endl;
         }
     }
 }
