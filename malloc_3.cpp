@@ -556,6 +556,7 @@ void* srealloc(void* oldp, size_t size) {
                     break;
                 }
             }
+            std::cout << "OPTION B-HERE2\n";
             memmove(block, oldp, keep_block->get_size());
             sfree(oldp);
             return block;
