@@ -215,9 +215,9 @@ MallocMetadata *FreeBlocksManager::find(size_t size) {
 void FreeBlocksManager::remove(MallocMetadata *to_remove) {
     to_remove->set_is_free(false);
     --block_list->num_free_blocks;
-    block_list->freed_bytes-=to_remove->size;
+    block_list->freed_bytes-=to_remove->get_size();
 
-    int ord = size_to_ord(to_remove->size);
+    int ord = size_to_ord(to_remove->get_size());
 
     if(to_remove->get_prev() == nullptr && to_remove->get_next() == nullptr) {//only
         free_block_manager->lists[ord] = nullptr;
@@ -390,7 +390,6 @@ void sfree(void* p){
     MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
 
-<<<<<<< HEAD
     if(!block->get_is_free()) {
         //Free Buddies
         while(size_to_ord(block->get_size()) <= NUM_ORDERS - 1){
@@ -405,43 +404,41 @@ void sfree(void* p){
                 free_block_manager->remove(block);
                 free_block_manager->remove(buddy);
                 block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
-=======
     std::cout << "HERE2" << std::endl;
 
-    if(!block->is_free) {
+    if(!block->get_is_free()) {
 
        // if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
             //keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
            // return (keep+1);
        // }
 
-        if(block->size<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
+        if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
-            while (size_to_ord(block->size) <= NUM_ORDERS - 1) {
+            while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
                 free_block_manager->insert(block);
                 MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
-                                                            (block->size + sizeof(MallocMetadata)));
-                if (!buddy->is_free) {
+                                                            (block->get_size() + sizeof(MallocMetadata)));
+                if (!buddy->get_is_free()) {
                     break;
                 }
 
                 //Buddy is also free
-                if (NUM_ORDERS - 1 != size_to_ord(block->size)) {
+                if (NUM_ORDERS - 1 != size_to_ord(block->get_size())) {
                     free_block_manager->remove(block);
                     free_block_manager->remove(buddy);
-                    block->size = block->size * 2 + sizeof(MallocMetadata);
+                    block->set_size(block->get_size() * 2 + sizeof(MallocMetadata));
 
                     --block_list->num_allocated_blocks;
                     block_list->allocated_bytes += sizeof(MallocMetadata);
                 } else {
                     break;
                 }
->>>>>>> origin/main
 
             }
         }
         else{ // used mmap
-            size_t size_tmp = block->size;
+            size_t size_tmp = block->get_size();
             std::cout << "HERE1" << std::endl;
             munmap((void*)block, size_tmp + sizeof(MallocMetadata));
             std::cout << "HERE2" << std::endl;
