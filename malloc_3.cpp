@@ -7,6 +7,7 @@
 #include <math.h>
 #include <ctime>
 #include <cstdlib>
+#include <sys/mman.h>
 
 #include "tests/header_2.h"
 
@@ -394,7 +395,7 @@ void sfree(void* p){
         //Free Buddies
         while(size_to_ord(block->get_size()) <= NUM_ORDERS - 1){
             free_block_manager->insert(block);
-            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->size + sizeof(MallocMetadata)));
+            MallocMetadata* buddy = (MallocMetadata*)(((intptr_t)block) ^ (block->get_size() + sizeof(MallocMetadata)));
             if(!buddy->get_is_free()){
                 break;
             }
