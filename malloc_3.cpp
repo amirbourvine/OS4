@@ -70,6 +70,10 @@ public:
         this->check_cookie();
         this->next = next;
     }
+
+    void set_cookie(){
+        this->cookie = global_cookie;
+    }
 } MallocMetadata;
 
 typedef struct BlocksList {
@@ -171,11 +175,11 @@ FreeBlocksManager::FreeBlocksManager() {
     char* curr;
 
     MallocMetadata* tmp = (MallocMetadata*)start;
-    if(global_cookie == 0){
-        std::cout << "VERY BAD\n";
-        std::cout << "global_cookie: " << global_cookie << std::endl;
-    }
+
     std::cout << "HERE-OK" << std::endl;
+    std::cout << "global_cookie: " << global_cookie << std::endl;
+
+    tmp->set_cookie();
     tmp->set_is_free(true);
     tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
     tmp->set_prev(nullptr);
@@ -191,6 +195,7 @@ FreeBlocksManager::FreeBlocksManager() {
         curr += INITIAL_BLOCK_SIZE;
         tmp = (MallocMetadata*)curr;
 
+        tmp->set_cookie();
         tmp->set_is_free(true);
         tmp->set_size(INITIAL_BLOCK_SIZE-sizeof(MallocMetadata));
         tmp->set_prev(keep);
@@ -347,6 +352,9 @@ void* smalloc(size_t size){
     else{ // did not find a block
         if(size>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata), PROT_READ|PROT_WRITE, MAP_ANONYMOUS,-1, 0);
+            keep->set_cookie();
+            keep->set_is_free(false);
+            keep->set_size(size);
             return (keep+1);
         }
         else {
