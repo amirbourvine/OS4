@@ -7,7 +7,7 @@ int main(){
     int* b1 = (int*)smalloc((128 * 1024));
     print();
     std::cout << "HERE1-MAIN" << std::endl;
-    b1[0] = 1;
+    //b1[0] = 1;
     std::cout << "HERE2-MAIN" << std::endl;
     sfree(b1);
     print();
