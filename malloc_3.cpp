@@ -333,8 +333,12 @@ void sfree(void* p){
     if(p == NULL)
         return;
 
+    std::cout << "HERE1" << std::endl;
+
     MallocMetadata* block = (MallocMetadata*)(p);
     block -= 1;
+
+    std::cout << "HERE2" << std::endl;
 
     if(!block->is_free) {
 
