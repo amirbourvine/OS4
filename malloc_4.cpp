@@ -9,14 +9,14 @@
 #include <cstdlib>
 #include <sys/mman.h>
 
-#include "tests/header_2.h"
-
 #define MAX_SIZE (100000000)
 #define NUM_ORDERS (11)
 #define INITIAL_BLOCK_SIZE (128*1024)
 #define INITIAL_BLOCKS_NUM (32)
 #define ALIGN (128*1024*32)
 #define MIN_BLOCK_SIZE (128)
+#define THRESHOLD_SMALLOC (4*1024*1024)
+#define THRESHOLD_SCALLOC (2*1024*1024)
 
 size_t global_cookie = 0;
 
@@ -27,6 +27,8 @@ private:
     bool is_free;
     MallocMetadata* next;
     MallocMetadata* prev;
+    bool is_malloc;
+    bool is_huge;
 
     void check_cookie() const{
         if(this->cookie != global_cookie){
@@ -43,7 +45,22 @@ public:
         this->check_cookie();
         this->size = size;
     }
-
+    bool get_is_malloc() const{
+        this->check_cookie();
+        return this->is_malloc;
+    }
+    void set_is_malloc(bool flag){
+        this->check_cookie();
+        this->is_malloc = flag;
+    }
+    bool get_is_huge() const{
+        this->check_cookie();
+        return this->is_huge;
+    }
+    void set_is_huge(bool flag){
+        this->check_cookie();
+        this->is_huge = flag;
+    }
     bool get_is_free() const{
         this->check_cookie();
         return this->is_free;
@@ -341,16 +358,53 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 }
 
 
-void* smalloc(size_t size){
+void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false){
     if(block_list->is_first){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
     }
     if(size==0 or size>MAX_SIZE)
         return NULL;
+
+    if(can_be_huge){
+        if(!is_scalloc && size>=THRESHOLD_SMALLOC){
+            MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
+                                         PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
+            keep->set_cookie();
+            keep->set_is_huge(true);
+            keep->set_is_malloc(true);
+            keep->set_is_free(false);
+            keep->set_size(size);
+
+            ++block_list->num_allocated_blocks;
+            block_list->allocated_bytes += size;
+
+            return (keep+1);
+        }
+        if(is_scalloc && ((size+ sizeof(MallocMetadata))>THRESHOLD_SCALLOC)){
+            MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
+                                                         PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
+            keep->set_cookie();
+            keep->set_is_huge(true);
+            keep->set_is_malloc(false);
+            keep->set_is_free(false);
+            keep->set_size(size);
+
+            ++block_list->num_allocated_blocks;
+            block_list->allocated_bytes += size;
+
+            return (keep+1);
+        }
+    }
+
     MallocMetadata* keep = block_list->free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
         keep = break_block_down(keep, size);
+        if(is_scalloc)
+            keep->set_is_malloc(false);
+        else
+            keep->set_is_malloc(true);
+        keep->set_is_huge(false);
         return (keep+1);
     }
     else{ // did not find a block
@@ -358,6 +412,12 @@ void* smalloc(size_t size){
             keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE,-1, 0);
             keep->set_cookie();
+            keep->set_is_huge(false);
+            if(is_scalloc)
+                keep->set_is_malloc(false);
+            else
+                keep->set_is_malloc(true);
+
             keep->set_is_free(false);
             keep->set_size(size);
 
@@ -397,7 +457,7 @@ size_t _size_meta_data(){
 }
 
 void* scalloc(size_t num, size_t size){
-    void* allocated_block = smalloc(num * size);
+    void* allocated_block = smalloc(num * size,true,true);
 
     if(allocated_block == NULL)
         return NULL;
@@ -416,7 +476,7 @@ void sfree(void* p){
 
     if(!block->get_is_free()) {
 
-        if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
+        if(!block->get_is_huge() && block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
                 block_list->free_block_manager->insert(block);
@@ -455,21 +515,21 @@ void sfree(void* p){
 
 void* srealloc(void* oldp, size_t size) {
     if(oldp == NULL){
-        return smalloc(size);
+        return smalloc(size);//no oldp
     }
 
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
 
     if(block->get_is_free()){
-        return smalloc(size);
+        return smalloc(size);//block is free, so info is invalid
     }
 
-    if(block->get_size()>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){//mmaped block
+    if(block->get_is_huge()||block->get_size()>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){//mmaped block
         if(size==block->get_size())
             return oldp;
 
-        void* allocated_block = smalloc(size);
+        void* allocated_block = smalloc(size, true,!block->get_is_malloc());
 
         size_t min_size = size >  block->get_size() ? block->get_size() : size;
         memmove(allocated_block, oldp, min_size);
@@ -520,7 +580,7 @@ void* srealloc(void* oldp, size_t size) {
         }
         if(!found){
             //option c
-            void* allocated_block = smalloc(size);
+            void* allocated_block = smalloc(size, true,!block->get_is_malloc());
             if(allocated_block == NULL)
                 return NULL;
             memmove(allocated_block, oldp, block->get_size());
@@ -535,7 +595,7 @@ void* srealloc(void* oldp, size_t size) {
                 if (max_ord != size_to_ord(block->get_size())) {
                     block_list->free_block_manager->insert(block);
                     MallocMetadata *buddy = (MallocMetadata *) (((intptr_t) block) ^
-                            (block->get_size() + sizeof(MallocMetadata)));
+                                                                (block->get_size() + sizeof(MallocMetadata)));
 
                     //Buddy is also free
 
@@ -552,22 +612,29 @@ void* srealloc(void* oldp, size_t size) {
                     break;
                 }
             }
-            block += 1;
-            memmove(block, oldp, keep_block->get_size());
-            //do not need to free oldp cause its a part of the block now
-            return block;
+            if((keep_block->get_is_malloc()&&block->get_size()>=THRESHOLD_SMALLOC)
+            ||(!keep_block->get_is_malloc()&&block->get_size()+ sizeof(MallocMetadata)>=THRESHOLD_SCALLOC)){
+                MallocMetadata* keep_temp = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
+                                                             PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
+                keep_temp->set_cookie();
+                keep_temp->set_is_huge(true);
+                keep_temp->set_is_malloc(keep_block->get_is_malloc());
+                keep_temp->set_is_free(false);
+                keep_temp->set_size(size);
+
+                ++block_list->num_allocated_blocks;
+                block_list->allocated_bytes += size;
+
+                memmove(keep_temp+1, oldp, keep_block->get_size());
+                sfree(block);
+                return keep_temp+1;
+            }
+            else {
+                block += 1;
+                memmove(block, oldp, keep_block->get_size());
+                //do not need to free oldp cause its a part of the block now
+                return block;
+            }
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
