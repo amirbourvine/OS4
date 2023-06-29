@@ -377,8 +377,11 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
             std::cout << "keep: " << (unsigned long long)keep << std::endl;
 
             keep->set_cookie();
+            std::cout << "HERE1\n";
             keep->set_is_huge(true);
+            std::cout << "HERE2\n";
             keep->set_is_malloc(true);
+            std::cout << "HERE3\n";
             keep->set_is_free(false);
             keep->set_size(size);
 
