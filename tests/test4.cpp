@@ -8,7 +8,9 @@ int main(){
     print();
     void* b1 = smalloc((1024*1024*5));
     print();
-    sfree(b1);
+    void* b2 = srealloc(b1,1024*1024*6);
+    print();
+    sfree(b2);
     print();
     return 0;
 }
