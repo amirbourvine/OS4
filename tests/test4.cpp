@@ -6,7 +6,7 @@
 
 int main(){
     print();
-    void* b1 = smalloc((1024*128));
+    void* b1 = smalloc((1024*1024*5));
     print();
     return 0;
 }
