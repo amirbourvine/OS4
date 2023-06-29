@@ -11,10 +11,6 @@
 
 #include "tests/header_4.h"
 
-#ifndef MAP_HUGETLB
-#define MAP_HUGETLB 0x40
-#endif
-
 #define MAX_SIZE (100000000)
 #define NUM_ORDERS (11)
 #define INITIAL_BLOCK_SIZE (128*1024)
@@ -378,7 +374,7 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
 
-            std::cout << "keep: " << (unsigned long long)keep << std::endl;
+            std::cout << "keep: " << (long long)keep << std::endl;
 
             keep->set_cookie();
             std::cout << "HERE1\n";
