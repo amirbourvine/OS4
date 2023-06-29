@@ -375,6 +375,7 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
 
             std::cout << "keep: " << (long long)keep << std::endl;
+            std::cout << "errno: " << errno << std::endl;
 
             keep->set_cookie();
             std::cout << "HERE1\n";
