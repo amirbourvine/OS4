@@ -9,6 +9,8 @@
 #include <cstdlib>
 #include <sys/mman.h>
 
+#include "tests/header_4.h"
+
 #define MAX_SIZE (100000000)
 #define NUM_ORDERS (11)
 #define INITIAL_BLOCK_SIZE (128*1024)
@@ -358,7 +360,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 }
 
 
-void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false){
+void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
     if(block_list->is_first){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
@@ -368,6 +370,7 @@ void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false){
 
     if(can_be_huge){
         if(!is_scalloc && size>=THRESHOLD_SMALLOC){
+            std::cout << "MALLOC-HUGE\n";
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
             keep->set_cookie();
@@ -382,6 +385,7 @@ void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false){
             return (keep+1);
         }
         if(is_scalloc && ((size+ sizeof(MallocMetadata))>THRESHOLD_SCALLOC)){
+            std::cout << "CALLOC-HUGE\n";
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
                                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
             keep->set_cookie();
@@ -476,7 +480,7 @@ void sfree(void* p){
 
     if(!block->get_is_free()) {
 
-        if(!block->get_is_huge() && block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
+        if(block->get_size()<=(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))) { // allocated with sbrk
             //Free Buddies
             while (size_to_ord(block->get_size()) <= NUM_ORDERS - 1) {
                 block_list->free_block_manager->insert(block);
@@ -612,29 +616,10 @@ void* srealloc(void* oldp, size_t size) {
                     break;
                 }
             }
-            if((keep_block->get_is_malloc()&&block->get_size()>=THRESHOLD_SMALLOC)
-            ||(!keep_block->get_is_malloc()&&block->get_size()+ sizeof(MallocMetadata)>=THRESHOLD_SCALLOC)){
-                MallocMetadata* keep_temp = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
-                                                             PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
-                keep_temp->set_cookie();
-                keep_temp->set_is_huge(true);
-                keep_temp->set_is_malloc(keep_block->get_is_malloc());
-                keep_temp->set_is_free(false);
-                keep_temp->set_size(size);
-
-                ++block_list->num_allocated_blocks;
-                block_list->allocated_bytes += size;
-
-                memmove(keep_temp+1, oldp, keep_block->get_size());
-                sfree(block);
-                return keep_temp+1;
-            }
-            else {
-                block += 1;
-                memmove(block, oldp, keep_block->get_size());
-                //do not need to free oldp cause its a part of the block now
-                return block;
-            }
+            block += 1;
+            memmove(block, oldp, keep_block->get_size());
+            //do not need to free oldp cause its a part of the block now
+            return block;
         }
     }
 }
