@@ -8,6 +8,8 @@ int main(){
     print();
     void* b1 = smalloc((1024*1024*5));
     print();
+    sfree(b1);
+    print();
     return 0;
 }
 
