@@ -382,6 +382,8 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
             keep->set_is_free(false);
             keep->set_size(size);
 
+            std::cout << "HERE\n";
+
             ++block_list->num_allocated_blocks;
             block_list->allocated_bytes += size;
 
