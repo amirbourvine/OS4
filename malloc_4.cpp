@@ -374,19 +374,11 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
 
-            std::cout << "keep: " << (long long)keep << std::endl;
-            std::cout << "errno: " << errno << std::endl;
-
             keep->set_cookie();
-            std::cout << "HERE1\n";
             keep->set_is_huge(true);
-            std::cout << "HERE2\n";
             keep->set_is_malloc(true);
-            std::cout << "HERE3\n";
             keep->set_is_free(false);
             keep->set_size(size);
-
-            std::cout << "HERE\n";
 
             ++block_list->num_allocated_blocks;
             block_list->allocated_bytes += size;
