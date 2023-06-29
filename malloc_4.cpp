@@ -31,6 +31,7 @@ private:
     MallocMetadata* prev;
     bool is_malloc;
     bool is_huge;
+    size_t block_size;
 
     void check_cookie() const{
         if(this->cookie != global_cookie){
@@ -46,6 +47,14 @@ public:
     void set_size(size_t size){
         this->check_cookie();
         this->size = size;
+    }
+    size_t get_block_size() const{
+        this->check_cookie();
+        return this->block_size;
+    }
+    void set_block_size(size_t size){
+        this->check_cookie();
+        this->block_size = size;
     }
     bool get_is_malloc() const{
         this->check_cookie();
@@ -360,7 +369,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 }
 
 
-void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
+void* smalloc(size_t size, bool can_be_huge, bool is_scalloc, size_t block_size){
     if(block_list->is_first){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
@@ -385,11 +394,12 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
 
             return (keep+1);
         }
-        if(is_scalloc && ((size+ sizeof(MallocMetadata))>THRESHOLD_SCALLOC)){
+        if(is_scalloc && (block_size>THRESHOLD_SCALLOC)){
             std::cout << "CALLOC-HUGE\n";
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
                                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
             keep->set_cookie();
+            keep->set_block_size(block_size);
             keep->set_is_huge(true);
             keep->set_is_malloc(false);
             keep->set_is_free(false);
@@ -405,8 +415,10 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
     MallocMetadata* keep = block_list->free_block_manager->find(size);
     if(keep!= nullptr){ //found a block
         keep = break_block_down(keep, size);
-        if(is_scalloc)
+        if(is_scalloc) {
             keep->set_is_malloc(false);
+            keep->set_block_size(block_size);
+        }
         else
             keep->set_is_malloc(true);
         keep->set_is_huge(false);
@@ -418,8 +430,10 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc){
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE,-1, 0);
             keep->set_cookie();
             keep->set_is_huge(false);
-            if(is_scalloc)
+            if(is_scalloc) {
                 keep->set_is_malloc(false);
+                keep->set_block_size(block_size);
+            }
             else
                 keep->set_is_malloc(true);
 
@@ -462,7 +476,7 @@ size_t _size_meta_data(){
 }
 
 void* scalloc(size_t num, size_t size){
-    void* allocated_block = smalloc(num * size,true,true);
+    void* allocated_block = smalloc(num * size,true,true, size);
 
     if(allocated_block == NULL)
         return NULL;
@@ -534,7 +548,11 @@ void* srealloc(void* oldp, size_t size) {
         if(size==block->get_size())
             return oldp;
 
-        void* allocated_block = smalloc(size, true,!block->get_is_malloc());
+        void* allocated_block;
+        if(block->get_is_malloc())
+            allocated_block = smalloc(size);
+        else
+            allocated_block = smalloc(size, true, true, block->get_block_size());
 
         size_t min_size = size >  block->get_size() ? block->get_size() : size;
         memmove(allocated_block, oldp, min_size);
@@ -585,7 +603,11 @@ void* srealloc(void* oldp, size_t size) {
         }
         if(!found){
             //option c
-            void* allocated_block = smalloc(size, true,!block->get_is_malloc());
+            void* allocated_block;
+            if(block->get_is_malloc())
+                allocated_block = smalloc(size);
+            else
+                allocated_block = smalloc(size, true, true, block->get_block_size());
             if(allocated_block == NULL)
                 return NULL;
             memmove(allocated_block, oldp, block->get_size());

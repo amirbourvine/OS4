@@ -12,7 +12,7 @@
 
 void print();
 
-void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false);
+void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false, size_t block_size = 0);
 
 size_t _num_free_blocks();
 
