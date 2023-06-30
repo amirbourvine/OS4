@@ -5,7 +5,7 @@
 #include "header_2.h"
 
 int main() {
-    //smalloc success tests
+    //smalloc success my_tests
     int num_elements = 5;
     int* array1 = (int*) smalloc(num_elements * sizeof(int));
 
@@ -161,7 +161,7 @@ int main() {
     
     std::cout << "allocation 3 succeed\n";
 
-    //Free tests
+    //Free my_tests
     sfree(array1);
     if(_num_free_blocks() != 1){
         std::cerr << "Incorrect number of free blocks\n";
