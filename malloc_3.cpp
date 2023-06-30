@@ -142,6 +142,9 @@ void BlocksList::insert(MallocMetadata *to_insert) {
 
 int size_to_ord(size_t size){
     //gets size of block (w\o meta-data)
+    if(size + sizeof(MallocMetadata) < MIN_BLOCK_SIZE){
+        return 0;
+    }
     return (int)ceil(log2((double)(size + sizeof(MallocMetadata))/128));
 }
 
