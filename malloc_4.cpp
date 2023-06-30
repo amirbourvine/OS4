@@ -9,8 +9,6 @@
 #include <cstdlib>
 #include <sys/mman.h>
 
-#include "tests/header_4.h"
-
 #define MAX_SIZE (100000000)
 #define NUM_ORDERS (11)
 #define INITIAL_BLOCK_SIZE (128*1024)
