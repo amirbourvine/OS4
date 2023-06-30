@@ -326,6 +326,8 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     char* curr;
     block_list->free_block_manager -> remove(init);
     while((((tmp->get_size() - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->get_size() - sizeof(MallocMetadata))/2 >= size)){
+        std::cout << "break_block_down-HERE\n";
+        std::cout << "break_block_down-size: " << tmp->get_size() << std::endl;
         size_t new_size = (tmp->get_size() - sizeof(MallocMetadata))/2;
         tmp->set_size(new_size);
         curr = (char*)tmp;
