@@ -327,12 +327,8 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     MallocMetadata* tmp = init;
     MallocMetadata* new_curr;
     char* curr;
-    std::cout << "break_block_down-HERE0\n";
     block_list->free_block_manager -> remove(init);
-    std::cout << "break_block_down-HERE1\n";
     while((((tmp->get_size() - sizeof(MallocMetadata))/2)>=(MIN_BLOCK_SIZE- sizeof(MallocMetadata)))&&((tmp->get_size() - sizeof(MallocMetadata))/2 >= size)){
-        std::cout << "break_block_down-HERE2\n";
-        std::cout << "break_block_down-size: " << tmp->get_size() << std::endl;
         size_t new_size = (tmp->get_size() - sizeof(MallocMetadata))/2;
         tmp->set_size(new_size);
         curr = (char*)tmp;
@@ -353,15 +349,11 @@ void* smalloc(size_t size){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
     }
-    std::cout << "smalloc-HERE0\n";
     if(size==0 or size>MAX_SIZE)
         return NULL;
     MallocMetadata* keep = block_list->free_block_manager->find(size);
-    std::cout << "smalloc-HERE1\n";
     if(keep!= nullptr){ //found a block
-        std::cout << "smalloc-HERE2\n";
         keep = break_block_down(keep, size);
-        std::cout << "smalloc-HERE3\n";
         return (keep+1);
     }
     else{ // did not find a block
