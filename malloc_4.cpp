@@ -369,7 +369,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
 }
 
 
-void* smalloc(size_t size, bool can_be_huge, bool is_scalloc, size_t block_size){
+void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false, size_t block_size = 0){
     if(block_list->is_first){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
@@ -379,7 +379,6 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc, size_t block_size)
 
     if(can_be_huge){
         if(!is_scalloc && size>=THRESHOLD_SMALLOC){
-            std::cout << "MALLOC-HUGE\n";
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size+ sizeof(MallocMetadata),
                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
 
@@ -395,7 +394,6 @@ void* smalloc(size_t size, bool can_be_huge, bool is_scalloc, size_t block_size)
             return (keep+1);
         }
         if(is_scalloc && (block_size>THRESHOLD_SCALLOC)){
-            std::cout << "CALLOC-HUGE\n";
             MallocMetadata* keep = (MallocMetadata*)mmap(NULL, size + sizeof(MallocMetadata),
                                                          PROT_READ|PROT_WRITE, MAP_ANONYMOUS|MAP_PRIVATE|MAP_HUGETLB,-1, 0);
             keep->set_cookie();
