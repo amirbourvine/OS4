@@ -368,6 +368,7 @@ void* smalloc(size_t size){
             perror("BLOCK NOT FOUND");
         }
     }
+    return nullptr;
 }
 
 size_t _num_free_blocks(){
