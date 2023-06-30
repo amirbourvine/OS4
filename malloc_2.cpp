@@ -105,15 +105,11 @@ void* use_sbrk(size_t size){
 void* smalloc(size_t size){
     if(size==0 or size>MAX_SIZE)
         return NULL;
-    std::cout << "smalloc-HERE0\n";
     MallocMetadata* keep = find_block(size);
-    std::cout << "smalloc-HERE1\n";
     if(keep!= nullptr){ //found a block
-        std::cout << "smalloc-HERE2\n";
         keep->is_free = false;
         block_list->num_free_blocks -= 1;
         block_list->freed_bytes -= keep->size; //does not include meta-data
-        std::cout << "smalloc-HERE3\n";
         return (keep+1);
     }
     else{ // did not find a block
