@@ -91,7 +91,7 @@ MallocMetadata* find_block(size_t size){
 
 
 void* use_sbrk(size_t size){
-    if(size==0 or size>MAX_SIZE)
+    if(size==0 or (size>MAX_SIZE+ sizeof(MallocMetadata)))
         return NULL;
 
     void* ptr = sbrk(size);
