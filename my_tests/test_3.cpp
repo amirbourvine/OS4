@@ -7,11 +7,11 @@ int main(){
 
     void* ptr2 = smalloc(32);  // Allocate 32 bytes
 
-    // Overflow the first allocation
-    char* overflowPtr = reinterpret_cast<char*>(ptr1);
-    for (int i = 0; i < 2000; i++) {
-        overflowPtr[i] = 'A';
-    }
+//    // Overflow the first allocation
+//    char* overflowPtr = reinterpret_cast<char*>(ptr1);
+//    for (int i = 0; i < 2000; i++) {
+//        overflowPtr[i] = 'A';
+//    }
 
     // Allocate more memory
     void* ptr3 = smalloc(64);  // Allocate 64 bytes
