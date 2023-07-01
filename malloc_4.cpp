@@ -366,8 +366,7 @@ MallocMetadata* break_block_down(MallocMetadata* init, size_t size){
     return tmp;
 }
 
-
-void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false, size_t block_size = 0){
+void* smalloc_aux(size_t size, bool can_be_huge = true, bool is_scalloc = false, size_t block_size = 0){
     if(block_list->is_first){
         block_list->is_first = false;
         block_list->free_block_manager = new FreeBlocksManager();
@@ -447,6 +446,10 @@ void* smalloc(size_t size, bool can_be_huge = true, bool is_scalloc = false, siz
     }
 }
 
+void* smalloc(size_t size){
+    return smalloc_aux(size);
+}
+
 size_t _num_free_blocks(){
     return block_list->num_free_blocks;
 }
@@ -472,7 +475,7 @@ size_t _size_meta_data(){
 }
 
 void* scalloc(size_t num, size_t size){
-    void* allocated_block = smalloc(num * size,true,true, size);
+    void* allocated_block = smalloc_aux(num * size,true,true, size);
 
     if(allocated_block == NULL)
         return NULL;
@@ -530,14 +533,14 @@ void sfree(void* p){
 
 void* srealloc(void* oldp, size_t size) {
     if(oldp == NULL){
-        return smalloc(size);//no oldp
+        return smalloc_aux(size);//no oldp
     }
 
     MallocMetadata *block = (MallocMetadata*)(oldp);
     block -= 1;
 
     if(block->get_is_free()){
-        return smalloc(size);//block is free, so info is invalid
+        return smalloc_aux(size);//block is free, so info is invalid
     }
 
     if(block->get_is_huge()||block->get_size()>(INITIAL_BLOCK_SIZE- sizeof(MallocMetadata))){//mmaped block
@@ -546,9 +549,9 @@ void* srealloc(void* oldp, size_t size) {
 
         void* allocated_block;
         if(block->get_is_malloc())
-            allocated_block = smalloc(size);
+            allocated_block = smalloc_aux(size);
         else
-            allocated_block = smalloc(size, true, true, block->get_block_size());
+            allocated_block = smalloc_aux(size, true, true, block->get_block_size());
 
         size_t min_size = size >  block->get_size() ? block->get_size() : size;
         memmove(allocated_block, oldp, min_size);
@@ -601,9 +604,9 @@ void* srealloc(void* oldp, size_t size) {
             //option c
             void* allocated_block;
             if(block->get_is_malloc())
-                allocated_block = smalloc(size);
+                allocated_block = smalloc_aux(size);
             else
-                allocated_block = smalloc(size, true, true, block->get_block_size());
+                allocated_block = smalloc_aux(size, true, true, block->get_block_size());
             if(allocated_block == NULL)
                 return NULL;
             memmove(allocated_block, oldp, block->get_size());
